@@ -1,3 +1,5 @@
+import { parseAdminAccounts } from '../actor/technician';
+
 /**
  * All environment-specific values live here. Nothing in the application code
  * may hard-code a URL, issuer, audience or secret (spec §30, §41.15).
@@ -9,6 +11,8 @@ export interface AppConfig {
   subsystemName: string;
   /** ที่เก็บรูปงานซ่อมและรูปโปรไฟล์ (relative = นับจากโฟลเดอร์ backend/) */
   uploadDir: string;
+  /** อีเมลบัญชี Core Hub (core role staff/lecturer) ที่เป็นผู้ดูแลระบบแจ้งซ่อม — ADMIN_ACCOUNTS */
+  adminAccounts: string[];
   coreHub: {
     url: string;
     /** Core Hub's web app, where /auth/login and /auth/logout send the browser. */
@@ -41,6 +45,7 @@ export default (): AppConfig => {
     subsystemId: process.env.SUBSYSTEM_ID ?? 'csmju-maintenance-request',
     subsystemName: process.env.SUBSYSTEM_NAME ?? 'ระบบแจ้งซ่อม',
     uploadDir: process.env.UPLOAD_DIR ?? 'uploads',
+    adminAccounts: parseAdminAccounts(process.env.ADMIN_ACCOUNTS),
     coreHub: {
       url: coreHubUrl,
       // On the real server the web app and the API share one origin.

@@ -104,6 +104,10 @@ pnpm --filter frontend test    21 passed
    รูปโปรไฟล์ครอปเป็นสี่เหลี่ยม 512px ในเบราว์เซอร์ รับเฉพาะ JPG/PNG/WebP ≤ 2 MB (ตรวจ magic bytes)
    · ชื่อจริงแสดงเฉพาะหน้ารายละเอียด (หาไม่เกิน 10 คนต่อคำขอ) ผู้ดูที่ไม่ใช่ staff/lecturer/admin เห็นชื่อตัวเองเท่านั้น
 8. **ช่าง** = บุคลากร (core role `staff`) ที่ผู้ดูแลแต่งตั้ง · ถอดได้เมื่อไม่มีงานค้าง (409)
+   · **⚠️ ผู้ดูแลระบบแจ้งซ่อมจาก ADMIN_ACCOUNTS** — บัญชีเจ้าของระบบของทีมมี core role `staff` จึงได้แค่ USER ·
+   สิทธิ์พิเศษรายบุคคลของ Core Hub (subsystem-registry ข้อ 7) ยังไม่ใส่ role ใน token จึงใช้ค่าตั้ง `ADMIN_ACCOUNTS`
+   (อีเมลจาก token ที่ตรวจแล้ว · เฉพาะ staff/lecturer) ตั้งที่ server ไม่อยู่ในโค้ดหรือ repo — เบี่ยงจากข้อห้ามรายชื่อผู้ใช้ ต้องแจ้ง PL
+   และเลิกใช้เมื่อ Core Hub รองรับสิทธิ์พิเศษใน token
 9. **รูปงานซ่อมเก็บบนดิสก์** (`UPLOAD_DIR`, volume ใน Docker) ไม่ใช่ object storage
 10. **QR** — whitelist ไม่มีไลบรารี QR จึงเขียน encoder เอง (byte mode, v1–40, L/M/Q/H) · ทดสอบด้วยตัวถอดรหัสที่เขียนแยก
     (`frontend/src/lib/qr.test.ts`) และตรวจกับ jsQR ระหว่างพัฒนา 160/160

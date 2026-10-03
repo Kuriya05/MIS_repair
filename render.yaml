@@ -28,6 +28,10 @@ services:
         value: csmju2030
       - key: SUBSYSTEM_ID
         value: csmju-maintenance-request
+      # อีเมลบัญชี Core Hub (staff/lecturer) ที่เป็นผู้ดูแลระบบแจ้งซ่อม คั่นด้วย , — กรอกในหน้า Environment ของ Render
+      # (ไม่เขียนชื่อบัญชีไว้ใน repo)
+      - key: ADMIN_ACCOUNTS
+        sync: false
       # แผนฟรีไม่มีดิสก์ถาวร — รูปที่อัปโหลดหายเมื่อ deploy ใหม่ (พอสำหรับทดสอบ)
       - key: UPLOAD_DIR
         value: /data/uploads
