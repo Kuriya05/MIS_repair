@@ -79,13 +79,8 @@ CREATE DATABASE repair_db OWNER repair;
 ระบบพาไป `/auth/login` → เว็บ Core Hub → กลับมาที่ `/auth/callback` ซึ่ง backend ตรวจ state + token
 แล้วตั้งคุกกี้ `csmju_maintenance_request_access_token` (HttpOnly) · token หมดทุก 15 นาที หน้าเว็บต่ออายุให้เอง
 
-**ใช้ Core Hub ตัวจำลองแทน** (เช่น ยังไม่ได้ลงทะเบียน หรือทดสอบ role ที่ไม่มีบัญชีจริง เช่น admin):
-รัน `node ../mock-core-hub.js` (พอร์ต 13000) แล้วสร้าง `backend/.env` (ไม่ commit) ที่มี
-`CORE_HUB_URL=http://localhost:13000` · `CORE_HUB_JWKS_URL=http://localhost:13000/api/v1/.well-known/jwks.json` ·
-`CORE_HUB_WEB_URL=http://localhost:13000`
-
 - ผู้ใช้ที่เข้าระบบครั้งแรกจะถูกสร้างโปรไฟล์อัตโนมัติ (บันทึก `person_code` จาก `/people/me`) ·
-  แต่งตั้งช่างได้ที่หน้า **ผู้ใช้และช่าง** (รายชื่อดึงจาก Core Hub · เฉพาะบัญชี core role `staff`)
+  ผู้ดูแลระบบรับงานและอัปเดตสถานะเองได้ที่หน้า **บอร์ดงานซ่อม**
 - ชื่อผู้แจ้ง/ช่างแสดงเป็นชื่อจริงเฉพาะหน้ารายละเอียด และเฉพาะผู้ดูที่ Core Hub ให้ดูข้อมูลบุคคลได้
   (staff · lecturer · admin หรือชื่อของตัวเอง) — ที่อื่นแสดงรหัสบุคคล
 - ไม่มีข้อมูลจำลอง — seed สร้างห้องของสาขาให้ (ไม่มีอุปกรณ์) ผู้ดูแลเข้าแต่ละห้องแล้วกด **เพิ่มอุปกรณ์** ใส่รูป แล้วพิมพ์สติกเกอร์ QR
