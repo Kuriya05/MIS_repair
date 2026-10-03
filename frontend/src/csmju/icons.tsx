@@ -62,6 +62,15 @@ export const InboxIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** บอร์ดงาน (คอลัมน์ 3 แถว) */
+export const BoardIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3.5" y="4" width="17" height="16" rx="2" />
+    <path d="M9.5 4v16M14.5 4v16" />
+    <path d="M5.5 7.5h2M11 7.5h2M16.5 7.5h2M5.5 10.5h2M16.5 10.5h2" />
+  </Icon>
+);
+
 export const ChartIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M4 20V4M4 20h16" />
@@ -434,5 +443,77 @@ export const PushPinIcon = ({ filled = false, ...p }: IconProps & { filled?: boo
   <Icon {...p}>
     <path d="M9 3.5h6l-1 5.5 3.5 3.5v1.5h-11V12.5L10 9z" fill={filled ? 'currentColor' : 'none'} />
     <path d="M12 14v6.5" />
+  </Icon>
+);
+
+/* ไอคอนประเภทอุปกรณ์ในห้อง (CategoryIcon ของ API) */
+
+export const ComputerIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="13" height="10" rx="1.5" />
+    <path d="M7 18h5M9.5 14v4" />
+    <rect x="18" y="4" width="3" height="14" rx="1" />
+    <path d="M19.5 7.5h0" />
+  </Icon>
+);
+
+export const MonitorIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="18" height="12" rx="1.5" />
+    <path d="M8.5 20h7M12 16v4" />
+  </Icon>
+);
+
+export const ProjectorIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="2.5" y="8" width="19" height="9" rx="2" />
+    <circle cx="16" cy="12.5" r="2.5" />
+    <path d="M6 11.5h4M6 14h2M5 17v2M19 17v2" />
+  </Icon>
+);
+
+export const AirconIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="2.5" y="4.5" width="19" height="8" rx="2" />
+    <path d="M6 10h12" />
+    <path d="M8 15.5c0 1.5-1 2-1 3.5M12 15.5v4M16 15.5c0 1.5 1 2 1 3.5" />
+  </Icon>
+);
+
+export const FanIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <circle cx="12" cy="10" r="1.5" />
+    <path d="M12 8.5C11 5.5 12 3.5 14 3.5s2 3-2 5M13.4 10.6c3-.6 4.9.6 4.6 2.6s-3.3 1.6-4.6-2.6M10.6 10.6c-2.2 2.2-4.4 2.3-5.3.5s1.6-3.2 5.3-.5" />
+    <path d="M12 11.5v6M8.5 20.5h7" />
+  </Icon>
+);
+
+export const LightIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M9 17.5h6M10 20.5h4" />
+    <path d="M12 3.5a6 6 0 0 0-3.6 10.8c.4.3.6.8.6 1.3v1.9h6v-1.9c0-.5.2-1 .6-1.3A6 6 0 0 0 12 3.5Z" />
+  </Icon>
+);
+
+export const NetworkIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <rect x="9" y="3" width="6" height="5" rx="1" />
+    <rect x="3" y="16" width="6" height="5" rx="1" />
+    <rect x="15" y="16" width="6" height="5" rx="1" />
+    <path d="M12 8v4M6 16v-4h12v4" />
+  </Icon>
+);
+
+export const AudioIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+    <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+  </Icon>
+);
+
+export const FurnitureIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 9.5h18M5 9.5v10M19 9.5v10M5 14h14" />
+    <path d="M7 9.5V5.5A1.5 1.5 0 0 1 8.5 4h7A1.5 1.5 0 0 1 17 5.5v4" />
   </Icon>
 );

@@ -1,4 +1,4 @@
-# csmju-repair backend — build จากรากของ repo:  docker build -f backend/Dockerfile .
+# csmju-maintenance-request backend — build จากรากของ repo:  docker build -f backend/Dockerfile .
 FROM node:22-alpine AS build
 RUN corepack enable
 WORKDIR /repo
@@ -19,6 +19,6 @@ WORKDIR /app
 COPY --from=build /out ./
 RUN mkdir -p /data/uploads && chown -R node:node /data /app
 USER node
-EXPOSE 3002
+EXPOSE 4221
 # ใช้ migration ที่ commit ไว้ แล้วจึงเริ่มเซิร์ฟเวอร์
 CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]

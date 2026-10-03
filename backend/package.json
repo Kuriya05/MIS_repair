@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "private": true,
-  "description": "csmju-repair backend (NestJS + Prisma)",
+  "description": "csmju-maintenance-request backend (NestJS + Prisma)",
   "scripts": {
     "postinstall": "prisma generate",
     "build": "nest build",
@@ -16,7 +16,6 @@
     "generate:openapi": "ts-node scripts/generate-openapi.ts",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "ts-node prisma/seed.ts",
-    "db:seed:demo": "ts-node prisma/seed-demo.ts",
     "test:unit": "jest"
   },
   "dependencies": {

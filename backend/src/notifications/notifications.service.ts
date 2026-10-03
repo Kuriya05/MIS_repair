@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import type { Notification, Prisma } from '../../generated/prisma/client';
-import { forbidden, notFound } from '../common/api-error';
-import { Paginated } from '../common/envelope';
-import { pageArgs } from '../common/pagination.dto';
+import { forbidden, notFound } from '../shared/errors';
+import { Paginated } from '../shared/paginated';
+import { pageArgs } from '../shared/pagination.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { ListNotificationsQueryDto, NotificationDto } from './notifications.dto';
 

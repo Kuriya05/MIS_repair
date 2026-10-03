@@ -1,26 +1,22 @@
 import { Global, Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { ProfilesModule } from '../profiles/profiles.module';
+import { AuthEventsLogger } from './auth-events.logger';
 import { CoreHubTokenVerifier } from './core-hub-token.verifier';
-import { CoreHubJwtGuard } from './guards/core-hub-jwt.guard';
-import { PermissionsGuard } from './guards/permissions.guard';
-import { IdentityService } from './identity.service';
 import { JwksService } from './jwks.service';
 import { MeController } from './me.controller';
-import { SsoCallbackController } from './sso-callback.controller';
+import { SsoController } from './sso.controller';
+import { CoreHubJwtGuard } from './guards/core-hub-jwt.guard';
+import { PermissionsGuard } from './guards/permissions.guard';
 
-/** ทุก route ต้องมี token เป็นค่าเริ่มต้น — ยกเว้นที่ติด @Public() (GET /api/health, GET /auth/callback) */
+/**
+ * Core Hub integration module. It contains NO login form, registration,
+ * password or session store - authentication happens at the Core Hub
+ * (spec §7, §41). SsoController only redirects to Core Hub and turns the
+ * verified Core Hub token into a cookie (auth-contract 5).
+ */
 @Global()
 @Module({
-  imports: [ProfilesModule],
-  controllers: [SsoCallbackController, MeController],
-  providers: [
-    JwksService,
-    CoreHubTokenVerifier,
-    IdentityService,
-    { provide: APP_GUARD, useClass: CoreHubJwtGuard },
-    { provide: APP_GUARD, useClass: PermissionsGuard },
-  ],
-  exports: [IdentityService, ProfilesModule],
+  controllers: [MeController, SsoController],
+  providers: [AuthEventsLogger, JwksService, CoreHubTokenVerifier, CoreHubJwtGuard, PermissionsGuard],
+  exports: [AuthEventsLogger, JwksService, CoreHubTokenVerifier, CoreHubJwtGuard, PermissionsGuard],
 })
 export class AuthModule {}

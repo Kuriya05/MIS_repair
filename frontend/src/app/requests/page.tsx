@@ -21,7 +21,7 @@ import type { RepairRequestSummary } from '@/lib/types';
 
 export const metadata: Metadata = { title: 'ใบแจ้งซ่อมของฉัน' };
 
-const FILTERS = ['q', 'status', 'state', 'priority', 'buildingId', 'categoryId', 'sort', 'page'] as const;
+const FILTERS = ['q', 'status', 'state', 'priority', 'buildingCode', 'categoryId', 'sort', 'page'] as const;
 
 export default async function MyRequestsPage(props: PageProps<'/requests'>) {
   const params = await props.searchParams;

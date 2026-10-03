@@ -1,53 +1,69 @@
-import type { ExecutionContext } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { identity } from '../../__tests__/fixtures';
-import { ApiError } from '../../common/api-error';
-import type { CoreHubIdentity } from '../core-hub-identity';
-import { REQUIRED_PERMISSIONS } from '../decorators/require-permissions.decorator';
-import { Permission, type PermissionValue } from '../permissions';
+import { AuthEventsLogger } from '../auth-events.logger';
+import { CoreHubIdentity, SubsystemRole } from '../core-hub-identity';
+import { Permission } from '../permissions';
 import { PermissionsGuard } from './permissions.guard';
 
-function contextFor(required: PermissionValue[] | undefined, user?: CoreHubIdentity): ExecutionContext {
-  const handler = () => undefined;
-  if (required) Reflect.defineMetadata(REQUIRED_PERMISSIONS, required, handler);
+function contextFor(user?: CoreHubIdentity): ExecutionContext {
   return {
-    getHandler: () => handler,
-    getClass: () => class {},
-    switchToHttp: () => ({ getRequest: () => ({ identity: user, path: '/api/v1/buildings' }) }),
+    switchToHttp: () => ({ getRequest: () => ({ user, path: '/api/v1/courses' }) }),
+    getHandler: () => undefined,
+    getClass: () => undefined,
   } as unknown as ExecutionContext;
 }
 
-describe('PermissionsGuard — สิทธิ์ไม่พอต้องเป็น 403 (authorization.md ข้อ 5)', () => {
-  const guard = new PermissionsGuard(new Reflector());
+function identity(role: SubsystemRole): CoreHubIdentity {
+  return {
+    id: 'user-001',
+    email: 'user@core.local',
+    coreRole: role.toLowerCase(),
+    subsystemRole: role,
+  };
+}
 
-  it('lets a request through when the route declares no permission', () => {
-    expect(guard.canActivate(contextFor(undefined, identity('USER')))).toBe(true);
+describe('PermissionsGuard - authorization tests (spec §15, §36)', () => {
+  const reflector = new Reflector();
+  const guard = new PermissionsGuard(reflector, new AuthEventsLogger());
+
+  function requirePermissions(...permissions: Permission[]): void {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(permissions);
+  }
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('allows a route with no permission metadata', () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(undefined);
+    expect(guard.canActivate(contextFor(identity(SubsystemRole.USER)))).toBe(true);
   });
 
-  it('allows when the caller holds at least one of the listed permissions', () => {
-    const ctx = contextFor(
-      [Permission.REPAIR_REQUEST_READ_OWN, Permission.REPAIR_REQUEST_READ_ANY],
-      identity('USER'),
+  it('allows an ADMIN to assign a repair job', () => {
+    requirePermissions(Permission.REPAIR_JOB_ASSIGN);
+    expect(guard.canActivate(contextFor(identity(SubsystemRole.ADMIN)))).toBe(true);
+  });
+
+  it('denies a USER assigning a repair job with 403', () => {
+    requirePermissions(Permission.REPAIR_JOB_ASSIGN);
+    expect(() => guard.canActivate(contextFor(identity(SubsystemRole.USER)))).toThrow(
+      expect.objectContaining({ status: 403 }),
     );
-    expect(guard.canActivate(ctx)).toBe(true);
   });
 
-  it('answers 403 FORBIDDEN (not 401/404) when a USER tries to create a building', () => {
-    const ctx = contextFor([Permission.BUILDING_CREATE], identity('USER'));
-    try {
-      guard.canActivate(ctx);
-      fail('expected FORBIDDEN');
-    } catch (error) {
-      expect(error).toBeInstanceOf(ApiError);
-      expect((error as ApiError).getStatus()).toBe(403);
-      expect((error as ApiError).code).toBe('FORBIDDEN');
-    }
+  it('denies an ADMIN filing a repair request (admins do not report)', () => {
+    requirePermissions(Permission.REPAIR_REQUEST_CREATE);
+    expect(() => guard.canActivate(contextFor(identity(SubsystemRole.ADMIN)))).toThrow(
+      expect.objectContaining({ status: 403 }),
+    );
+    expect(guard.canActivate(contextFor(identity(SubsystemRole.USER)))).toBe(true);
   });
 
-  it('a TECHNICIAN may accept jobs but not assign them', () => {
-    expect(guard.canActivate(contextFor([Permission.REPAIR_JOB_ACCEPT], identity('TECHNICIAN')))).toBe(true);
-    expect(() =>
-      guard.canActivate(contextFor([Permission.REPAIR_JOB_ASSIGN], identity('TECHNICIAN'))),
-    ).toThrow(ApiError);
+  it('passes when the role holds any one of the required permissions', () => {
+    requirePermissions(Permission.REPAIR_REQUEST_READ_ANY, Permission.REPAIR_REQUEST_READ_OWN);
+    expect(guard.canActivate(contextFor(identity(SubsystemRole.USER)))).toBe(true);
+  });
+
+  it('returns 401 when no verified identity is present', () => {
+    requirePermissions(Permission.BUILDING_READ);
+    expect(() => guard.canActivate(contextFor(undefined))).toThrow(expect.objectContaining({ status: 401 }));
   });
 });

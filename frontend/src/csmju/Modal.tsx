@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { CloseIcon } from './icons';
 import { iconRoundButtonClass } from './ui';
 
@@ -10,6 +11,8 @@ const FOCUSABLE =
 /**
  * Modal ตามสเปคข้อ 7.2.1 / 8.3 — role="dialog" + aria-modal + aria-labelledby · ปิดด้วย Esc / คลิก scrim
  * เพิ่มสิ่งที่สเปคระบุว่ายังขาด: กัก focus ไว้ในกล่อง และคืน focus กลับจุดเดิมเมื่อปิด
+ * วาดผ่าน portal ที่ document.body — ถ้าวางในการ์ดที่มี transform (เช่น .fade-slide-up) หรือ overflow-hidden
+ * กล่องที่เป็น fixed จะยึดกับการ์ดแทนหน้าจอ แล้วถูกตัด/ซ้อนกับเนื้อหา
  */
 export function Modal({
   open,
@@ -70,9 +73,9 @@ export function Modal({
     };
   }, [open, dismissible]);
 
-  if (!open) return null;
+  if (!open || typeof document === 'undefined') return null;
   const width = size === 'xl' ? 'max-w-4xl' : size === 'lg' ? 'max-w-2xl' : 'max-w-md';
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
       <button
         type="button"
@@ -106,6 +109,7 @@ export function Modal({
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -2,8 +2,12 @@ packages:
   - 'frontend'
   - 'backend'
 
-# pnpm 10 ไม่รัน build script ของ dependency ถ้าไม่อนุญาตไว้
-onlyBuiltDependencies:
-  - '@nestjs/core'
-  - '@prisma/engines'
-  - 'prisma'
+# pnpm 11+ (โครงการใช้ 12.3.4): อนุญาตให้รัน build script เฉพาะแพ็กเกจที่จำเป็น
+allowBuilds:
+  '@nestjs/core': true
+  '@prisma/engines': true
+  prisma: true
+  '@parcel/watcher': true
+  unrs-resolver: true
+  '@scarf/scarf': false
+  sharp: true

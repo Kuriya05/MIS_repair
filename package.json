@@ -1,8 +1,8 @@
 {
-  "name": "csmju-repair",
+  "name": "csmju-maintenance-request",
   "private": true,
   "description": "ระบบแจ้งซ่อม — ระบบย่อยของโครงการ CSMJU2030",
-  "packageManager": "pnpm@10.34.5",
+  "packageManager": "pnpm@12.3.4",
   "engines": {
     "node": "22.x"
   },

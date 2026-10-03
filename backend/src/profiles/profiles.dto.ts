@@ -1,91 +1,30 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import {
-  IsBoolean,
-  IsIn,
-  IsOptional,
-  IsString,
-  Matches,
-  MaxLength,
-  MinLength,
-  ValidateIf,
-} from 'class-validator';
-import { PaginationQueryDto } from '../common/pagination.dto';
-import { trim } from '../common/transforms';
-import { SUBSYSTEM_ROLES, type SubsystemRole } from '../auth/role-mapping';
+import { IsBoolean, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
+import { SubsystemRole } from '../auth/core-hub-identity';
+import { CORE_ROLES, SUBSYSTEM_ROLES } from '../actor/technician';
+import { PaginationQueryDto } from '../shared/pagination.dto';
+import { trimToUndefined } from '../shared/transforms';
 
-/** "081-234-5678" / "+66 81 234 5678" → "0812345678" (data-dictionary.md ข้อ 6: Phone no-hyphen) */
-const normalizePhone = ({ value }: { value: unknown }) =>
-  typeof value === 'string'
-    ? value
-        .trim()
-        .replace(/^\+66/, '0')
-        .replace(/[\s().-]/g, '')
-    : value;
+export const PERSON_CODE_DESCRIPTION =
+  'รหัสนักศึกษา/บุคลากรจาก Core Hub (GET /people/me) · null = บัญชียังไม่ผูกกับบุคคลในทะเบียน';
+export const AVATAR_URL_DESCRIPTION =
+  'รูปโปรไฟล์ (GET ได้เมื่อเข้าสู่ระบบแล้ว) · null = ยังไม่มีรูป ให้แสดงอักษรย่อแทน';
 
-export class UpdateMyProfileDto {
-  @ApiPropertyOptional({ maxLength: 100, description: 'ส่ง "" เพื่อล้างค่า' })
-  @IsOptional()
-  @Transform(trim)
-  @IsString({ message: 'ชื่อที่แสดงต้องเป็นข้อความ' })
-  @ValidateIf((_, value) => value !== '')
-  @MinLength(2, { message: 'ชื่อที่แสดงต้องมีอย่างน้อย 2 ตัวอักษร' })
-  @MaxLength(100, { message: 'ชื่อที่แสดงยาวได้ไม่เกิน 100 ตัวอักษร' })
-  displayName?: string;
-
-  @ApiPropertyOptional({
-    description: 'ตัวเลข 9–10 หลักขึ้นต้นด้วย 0 · ส่ง "" เพื่อล้างค่า',
-    example: '0812345678',
-  })
-  @IsOptional()
-  @Transform(normalizePhone)
-  @IsString({ message: 'เบอร์โทรต้องเป็นข้อความ' })
-  @ValidateIf((_, value) => value !== '')
-  @Matches(/^0\d{8,9}$/, { message: 'เบอร์โทรต้องเป็นตัวเลข 9–10 หลักขึ้นต้นด้วย 0 เช่น 081-234-5678' })
-  phone?: string;
-
-  @ApiPropertyOptional({ maxLength: 100, description: 'ห้อง/หน่วยงานที่ติดต่อได้ · ส่ง "" เพื่อล้างค่า' })
-  @IsOptional()
-  @Transform(trim)
-  @IsString({ message: 'หน่วยงานต้องเป็นข้อความ' })
-  @ValidateIf((_, value) => value !== '')
-  @MinLength(2, { message: 'หน่วยงานต้องมีอย่างน้อย 2 ตัวอักษร' })
-  @MaxLength(100, { message: 'หน่วยงานยาวได้ไม่เกิน 100 ตัวอักษร' })
-  workUnit?: string;
-}
-
+/** ผู้ที่เคยเข้าระบบนี้ (ใช้เลือกช่างตอนมอบหมายงาน) */
 export class ListProfilesQueryDto extends PaginationQueryDto {
-  @ApiPropertyOptional({ maxLength: 100, description: 'ค้นจากชื่อ อีเมล หรือหน่วยงาน' })
-  @IsOptional()
-  @Transform(trim)
-  @IsString({ message: 'คำค้นต้องเป็นข้อความ' })
-  @MaxLength(100, { message: 'คำค้นยาวได้ไม่เกิน 100 ตัวอักษร' })
-  q?: string;
-
   @ApiPropertyOptional({ enum: SUBSYSTEM_ROLES })
   @IsOptional()
   @IsIn(SUBSYSTEM_ROLES, { message: `role ต้องเป็นหนึ่งใน ${SUBSYSTEM_ROLES.join(', ')}` })
   role?: SubsystemRole;
 }
 
-export class UpdateProfileDto {
-  @ApiProperty({ description: 'แต่งตั้ง/ถอดถอนช่างซ่อมบำรุง (เฉพาะผู้ใช้ core role staff)' })
-  @IsBoolean({ message: 'isTechnician ต้องเป็น true หรือ false' })
-  isTechnician: boolean;
-}
-
-const CORE_ROLE_VALUES = ['student', 'alumni', 'staff', 'admin'];
-
-/** ผู้ใช้ที่เคยเข้าระบบนี้ (มุมมองของผู้ดูแลระบบ) */
-export const AVATAR_URL_DESCRIPTION =
-  'รูปโปรไฟล์ (GET ได้เมื่อเข้าสู่ระบบแล้ว) · null = ยังไม่มีรูป ให้แสดงอักษรย่อแทน';
-
 export class ProfileDto {
-  @ApiProperty({ format: 'uuid', description: 'id ของโปรไฟล์ในระบบนี้ (ใช้กับ PATCH /profiles/:id)' })
-  id: string;
+  @ApiProperty({ format: 'uuid', description: 'id ของโปรไฟล์ในระบบนี้' }) id: string;
   @ApiProperty({ example: 'user-003', description: 'claim `sub` จาก Core Hub' }) coreUserId: string;
-  @ApiProperty({ example: 'staff@core.local' }) email: string;
-  @ApiProperty({ enum: CORE_ROLE_VALUES }) coreRole: string;
+  @ApiProperty({ type: String, nullable: true, example: 'somsak.m', description: PERSON_CODE_DESCRIPTION })
+  personCode: string | null;
+  @ApiProperty({ enum: CORE_ROLES }) coreRole: string;
   @ApiProperty({
     enum: SUBSYSTEM_ROLES,
     nullable: true,
@@ -93,35 +32,82 @@ export class ProfileDto {
   })
   subsystemRole: SubsystemRole | null;
   @ApiProperty() isTechnician: boolean;
-  @ApiProperty({ example: 'สมชาย ใจดี' }) displayName: string;
-  @ApiProperty({ type: String, nullable: true, example: '0812345678' }) phone: string | null;
-  @ApiProperty({ type: String, nullable: true, example: 'งานอาคารสถานที่' }) workUnit: string | null;
+  @ApiProperty({
+    example: 'somsak.m',
+    description: 'รายการไม่หาชื่อจาก Core Hub ทีละแถว จึงเป็น personCode (reference-data.md ข้อ 7.2)',
+  })
+  displayName: string;
   @ApiProperty({ type: String, nullable: true, description: AVATAR_URL_DESCRIPTION }) avatarUrl:
     string | null;
   @ApiProperty({ type: String, format: 'date-time', nullable: true }) lastSeenAt: string | null;
-  @ApiProperty({ format: 'date-time' }) createdAt: string;
-  @ApiProperty({ format: 'date-time' }) updatedAt: string;
 }
 
-/** ตัวตนของผู้เรียก — GET /api/v1/me */
-export class MeDto {
+/** รายชื่อบุคคลจาก Core Hub (หน้า "ผู้ใช้และช่าง" ของผู้ดูแล) */
+export class ListPeopleQueryDto extends PaginationQueryDto {
+  @ApiPropertyOptional({ maxLength: 100, description: 'ค้นในรหัสและชื่อ (Core Hub)' })
+  @IsOptional()
+  @Transform(trimToUndefined)
+  @IsString({ message: 'คำค้นต้องเป็นข้อความ' })
+  @MaxLength(100, { message: 'คำค้นยาวได้ไม่เกิน 100 ตัวอักษร' })
+  q?: string;
+
+  @ApiPropertyOptional({ enum: ['STUDENT', 'STAFF'], default: 'STUDENT' })
+  @IsOptional()
+  @IsIn(['STUDENT', 'STAFF'], { message: 'personType ต้องเป็น STUDENT หรือ STAFF' })
+  personType: 'STUDENT' | 'STAFF' = 'STUDENT';
+}
+
+/**
+ * บุคคลจาก Core Hub + สิ่งที่ระบบนี้เก็บเกี่ยวกับคนนั้น (ใบแจ้งซ่อม · การแต่งตั้งช่าง)
+ * ชื่อแสดงตอนดูเท่านั้น ไม่เก็บลงฐาน
+ */
+export class PersonListItemDto {
+  @ApiProperty({ example: '6504101234' }) personCode: string;
+  @ApiProperty({ example: 'นางสาวกริญญา ทาเกร' }) fullName: string;
+  @ApiProperty({ enum: ['STUDENT', 'STAFF'] }) personType: string;
+  @ApiProperty({ type: String, nullable: true, description: 'ประเภทบุคลากร เช่น LECTURER' }) staffType:
+    string | null;
+  @ApiProperty({ example: 'ACTIVE' }) status: string;
+  @ApiProperty({ type: String, nullable: true }) departmentName: string | null;
+  @ApiProperty({ description: 'เคยเข้าระบบแจ้งซ่อมแล้ว' }) hasProfile: boolean;
+  @ApiProperty() isTechnician: boolean;
+  @ApiProperty({ description: 'แต่งตั้งเป็นช่างได้ (บุคลากรสายสนับสนุนที่มีบัญชีใน Core Hub)' })
+  canBeTechnician: boolean;
+  @ApiProperty({ description: 'ใบแจ้งซ่อมที่คนนี้แจ้งในระบบนี้' }) requestCount: number;
+  @ApiProperty({ description: 'ที่ยังไม่ปิดงาน' }) openRequestCount: number;
+  @ApiProperty({ type: String, format: 'date-time', nullable: true }) lastSeenAt: string | null;
+}
+
+export class SetTechnicianDto {
+  @ApiProperty({ description: 'แต่งตั้ง (true) / ถอดถอน (false) ช่างซ่อมบำรุง' })
+  @IsBoolean({ message: 'isTechnician ต้องเป็น true หรือ false' })
+  isTechnician: boolean;
+}
+
+export class SessionDto {
+  @ApiProperty({ format: 'date-time', description: 'token หมดอายุเมื่อไร — ต่ออายุล่วงหน้าผ่าน /auth/login' })
+  expiresAt: string;
+}
+
+/**
+ * ผู้เรียกในมุมของระบบแจ้งซ่อม — GET /api/v1/profiles/me
+ * (GET /api/v1/me คงรูปแบบของ reference implementation สำหรับ conformance)
+ */
+export class MyProfileDto {
   @ApiProperty({ example: 'user-003', description: 'เท่ากับ claim `sub` ของ token' }) id: string;
-  @ApiProperty({ example: 'staff@core.local' }) email: string;
-  @ApiProperty({ enum: CORE_ROLE_VALUES, description: 'เท่ากับ claim `role` ของ token' }) coreRole: string;
-  @ApiProperty({ enum: SUBSYSTEM_ROLES }) subsystemRole: SubsystemRole;
-  @ApiProperty({ type: [String], example: ['repair-request:create', 'repair-request:read:own'] })
-  permissions: string[];
-  @ApiProperty({ example: 'สมชาย ใจดี', description: 'ถ้ายังไม่ตั้งชื่อ จะใช้ส่วนหน้าของอีเมล' })
-  displayName: string;
-  @ApiProperty({ description: 'false = ยังไม่ได้ตั้งชื่อที่แสดง (ควรชวนผู้ใช้กรอกโปรไฟล์)' })
-  hasDisplayName: boolean;
-  @ApiProperty({ type: String, nullable: true }) phone: string | null;
-  @ApiProperty({ type: String, nullable: true }) workUnit: string | null;
-  @ApiProperty({ type: String, nullable: true, description: AVATAR_URL_DESCRIPTION }) avatarUrl:
+  @ApiProperty({ enum: CORE_ROLES, description: 'เท่ากับ claim `role` ของ token' }) coreRole: string;
+  @ApiProperty({ enum: SUBSYSTEM_ROLES, description: 'role ที่ใช้จริง (รวมการแต่งตั้งช่าง)' })
+  subsystemRole: SubsystemRole;
+  @ApiProperty({ type: [String], example: ['repair-request:create'] }) permissions: string[];
+  @ApiProperty({ type: String, nullable: true, description: PERSON_CODE_DESCRIPTION }) personCode:
     string | null;
   @ApiProperty({
-    format: 'date-time',
-    description: 'token หมดอายุเมื่อไร — ต้องเข้าผ่าน Core Hub ใหม่หลังจากนี้',
+    example: 'นายสมชาย ใจดี',
+    description: 'ชื่อจาก Core Hub (GET /people/me) · ดูไม่ได้ = รหัส',
   })
-  sessionExpiresAt: string;
+  displayName: string;
+  @ApiProperty({ description: 'false = ชื่อด้านบนไม่ได้มาจาก Core Hub' }) nameFromCoreHub: boolean;
+  @ApiProperty({ type: String, nullable: true, description: AVATAR_URL_DESCRIPTION }) avatarUrl:
+    string | null;
+  @ApiProperty({ type: () => SessionDto }) session: SessionDto;
 }

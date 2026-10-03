@@ -1,28 +1,43 @@
 # manifest ของระบบย่อย — CI และ conformance อ่านไฟล์นี้ไฟล์เดียว
-# schema: standards/schemas/subsystem.schema.json
+# schema: standards/schemas/subsystem.schema.json · เวอร์ชัน standards อยู่ใน .standards-version
+# ห้ามใส่บัญชีหรือรหัสผ่านในไฟล์นี้ — บัญชีทดสอบอยู่ในไฟล์นอก repo ที่ CONFORMANCE_ACCOUNTS_FILE ชี้
+# (standards/docs/conformance.md ข้อ 2.1)
 
-name: csmju-repair          # ต้องตรงกับทะเบียนใน Core Hub และกับ data.service ของ /api/health
-standards_version: "1.0.0"
-conformance_level: L3                 # L1 · L2 · L3 (ระบบที่มี UI ต้องถึง L3)
+name: csmju-maintenance-request     # ตรงกับทะเบียนใน Core Hub, SUBSYSTEM_ID และ data.service ของ /api/health
+display_name: "ระบบแจ้งซ่อม"
+conformance_level: L3
 
-base_url: http://localhost:3002       # URL ของระบบย่อยตอนรันเพื่อทดสอบ
-core_hub_url: http://localhost:3000
-callback_path: /auth/callback         # ต้องตรงกับ callback_url ที่ลงทะเบียนไว้
+# frontend (Next.js :3221) เป็นประตูเดียวของระบบ: proxy /api/* และ /auth/login /auth/callback /auth/logout
+# ไป backend (NestJS :4221) — พอร์ตตามที่ผู้ดูแล dev server กำหนด (connect-core-hub.md ข้อ 1)
+base_url: http://localhost:3221
+core_hub_url: https://csmju2030.jowave.com
+core_hub_web_url: https://csmju2030.jowave.com
+callback_path: /auth/callback       # Callback URL ที่ลงทะเบียน = http://localhost:3221/auth/callback
+
+default_role_mapping:               # ต้องตรงกับ backend/src/auth/role-mapping.ts และทะเบียนของ Core Hub
+  student: USER
+  staff: USER                       # ผู้ดูแลระบบแจ้งซ่อมแต่งตั้งเป็นช่าง (TECHNICIAN) ได้ในระบบนี้
+  lecturer: USER
+  admin: ADMIN
+  # alumni · guest ไม่รับ (403)
 
 public_endpoints:
   - GET /api/health
+  - GET /auth/login
   - GET /auth/callback
+  - POST /auth/logout
 
 # conformance ใช้ probes ตรวจสัญญา API — ประกาศไม่ครบ = ขึ้น SKIP = ยังไม่ผ่าน
-# อาคาร (buildings): ทุก role อ่านได้ · เพิ่มได้เฉพาะผู้ดูแลระบบ (core admin → ADMIN)
+# หมวดหมู่งานซ่อม (categories): ทุก role ที่รับอ่านได้ · เพิ่มได้เฉพาะผู้ดูแลระบบ (core admin → ADMIN)
+# อาคารเป็นข้อมูลกลางของ Core Hub (อ่านอย่างเดียว) จึงใช้เป็น probe สร้างข้อมูลไม่ได้แล้ว
 probes:
-  collection: /api/v1/buildings
-  not_found: /api/v1/buildings/99999999-9999-4999-8999-999999999999
-  invalid_id: /api/v1/buildings/not-a-uuid
+  collection: /api/v1/categories
+  not_found: /api/v1/categories/99999999-9999-4999-8999-999999999999
+  invalid_id: /api/v1/categories/not-a-uuid
   create:
-    path: /api/v1/buildings
-    allowed_role: admin
-    denied_role: student
+    path: /api/v1/categories
+    allowed_role: admin               # Core Hub จริงไม่มีบัญชี admin ให้ทีม — รันเคสนี้กับ Core Hub ในเครื่อง (REPORT.md)
+    denied_role: guest                # role ที่มีบัญชีรหัสผ่านและต้องได้ 403
     invalid_body:
       name: ""
     valid_body:
@@ -31,7 +46,3 @@ probes:
 owners:
   pl: "@csmju2030/pl-repair"
   aie: "@csmju2030/aie-repair"
-
-display_name: "ระบบแจ้งซ่อม"
-repo: github.com/CSMJU2030/csmju-repair
-status: proposed

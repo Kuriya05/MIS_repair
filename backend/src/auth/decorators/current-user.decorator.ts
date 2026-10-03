@@ -1,12 +1,10 @@
-import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
-import { unauthorized } from '../../common/api-error';
-import type { AuthenticatedRequest, CoreHubIdentity } from '../core-hub-identity';
+import { ExecutionContext, createParamDecorator } from '@nestjs/common';
+import { CoreHubIdentity } from '../core-hub-identity';
 
-/** ตัวตนที่ผ่านการตรวจ token แล้ว (CoreHubJwtGuard เป็นผู้ใส่) */
+/** Injects the verified Core Hub identity attached by CoreHubJwtGuard. */
 export const CurrentUser = createParamDecorator(
-  (_data: unknown, context: ExecutionContext): CoreHubIdentity => {
-    const identity = context.switchToHttp().getRequest<AuthenticatedRequest>().identity;
-    if (!identity) throw unauthorized();
-    return identity;
+  (_data: unknown, ctx: ExecutionContext): CoreHubIdentity => {
+    const request = ctx.switchToHttp().getRequest<{ user?: CoreHubIdentity }>();
+    return request.user as CoreHubIdentity;
   },
 );

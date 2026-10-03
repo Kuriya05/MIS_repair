@@ -1,8 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsIn, IsOptional } from 'class-validator';
-import { PaginationQueryDto } from '../common/pagination.dto';
-import { toBoolean } from '../common/transforms';
+import { PaginationQueryDto } from '../shared/pagination.dto';
+import { toBoolean } from '../shared/transforms';
 
 export class NotificationDto {
   @ApiProperty({ format: 'uuid' }) id: string;

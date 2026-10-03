@@ -4,12 +4,12 @@ import { cookies } from 'next/headers';
 import { CsmjuAppShell, SIDEBAR_COOKIE, type ShellNavItem } from '@/csmju';
 import { CommandPalette } from '@/components/features/CommandPalette';
 import { NotificationBell } from '@/components/features/NotificationBell';
-import { ReturnToRedirect } from '@/components/features/ReturnToRedirect';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { ForbiddenState } from '@/components/shared/ForbiddenState';
 import { SessionRedirect } from '@/components/shared/SessionRedirect';
 import { ToastProvider } from '@/components/shared/Toast';
-import { coreHubHomeUrl, coreHubLoginUrl, CORE_HUB_URL, DISPLAY_NAME, SUBSYSTEM_ID } from '@/lib/config';
+import { SignedOut } from '@/components/shared/SignedOut';
+import { coreHubHomeUrl, DISPLAY_NAME, LOGOUT_ACTION, SESSION_COOKIE, SUBSYSTEM_ID } from '@/lib/config';
 import { CORE_ROLE_LABEL, SUBSYSTEM_ROLE_LABEL } from '@/lib/labels';
 import { can, P } from '@/lib/permissions';
 import { getMe } from '@/lib/session';
@@ -48,33 +48,34 @@ export const dynamic = 'force-dynamic';
 function navFor(user: Me): ShellNavItem[] {
   const items: ShellNavItem[] = [
     { label: 'ภาพรวม', labelEn: 'Overview', href: '/', icon: 'dashboard', exact: true },
-    { label: 'ใบแจ้งซ่อมของฉัน', labelEn: 'My requests', href: '/requests', icon: 'assignment' },
   ];
+  if (can(user, P.REQUEST_CREATE))
+    items.push({ label: 'ใบแจ้งซ่อมของฉัน', labelEn: 'My requests', href: '/requests', icon: 'assignment' });
+  items.push(
+    { label: 'อาคารและห้อง', labelEn: 'Rooms', href: '/buildings', icon: 'apartment' },
+    { label: 'ประเภทอุปกรณ์', labelEn: 'Equipment', href: '/equipment', icon: 'category' },
+  );
+  // บอร์ดงานรวมคิวงานและความเคลื่อนไหวล่าสุดไว้หน้าเดียว
   if (can(user, P.JOB_ACCEPT))
-    items.push({ label: 'คิวงานซ่อม', labelEn: 'Work queue', href: '/queue', icon: 'inbox' });
+    items.push({ label: 'บอร์ดงานซ่อม', labelEn: 'Board', href: '/board', icon: 'board' });
   if (can(user, P.STATISTICS_READ))
-    items.push({ label: 'สถิติงานซ่อม', labelEn: 'Statistics', href: '/dashboard', icon: 'chart' });
-  items.push({
-    label: 'การแจ้งเตือน',
-    labelEn: 'Notifications',
-    href: '/notifications',
-    icon: 'notifications',
-  });
-  if (can(user, P.PROFILE_READ_ANY)) {
-    items.push(
-      { label: 'ผู้ใช้และช่าง', labelEn: 'Users', href: '/admin/users', icon: 'group' },
-      { label: 'อาคาร', labelEn: 'Buildings', href: '/admin/buildings', icon: 'apartment' },
-      { label: 'หมวดหมู่งานซ่อม', labelEn: 'Categories', href: '/admin/categories', icon: 'category' },
-      { label: 'สติกเกอร์ QR', labelEn: 'QR tags', href: '/admin/qr-tags', icon: 'qr' },
-    );
-  }
+    items.push({ label: 'สถิติการแจ้งซ่อม', labelEn: 'Statistics', href: '/dashboard', icon: 'chart' });
+  if (!can(user, P.JOB_ACCEPT))
+    items.push({
+      label: 'การแจ้งเตือน',
+      labelEn: 'Notifications',
+      href: '/notifications',
+      icon: 'notifications',
+    });
   return items;
 }
 
 async function Shell({ children }: { children: React.ReactNode }) {
-  const me = await getMe();
+  const [me, cookieStore] = await Promise.all([getMe(), cookies()]);
+  const hasSession = Boolean(cookieStore.get(SESSION_COOKIE)?.value);
   if (!me.ok) {
-    if (me.status === 401) return <SessionRedirect />;
+    // มีคุกกี้แต่หมดอายุ = ต่ออายุเงียบ ๆ · ยังไม่เคยเข้าสู่ระบบ = หน้าต้อนรับพร้อมลิงก์ (แบบ reference)
+    if (me.status === 401) return hasSession ? <SessionRedirect /> : <SignedOut />;
     return (
       <main id="main" className="mx-auto flex min-h-dvh max-w-xl items-center p-4">
         <div className="w-full">
@@ -89,7 +90,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
   }
 
   const user = me.data;
-  const sidebarPinned = (await cookies()).get(SIDEBAR_COOKIE)?.value === 'pinned';
+  const sidebarPinned = cookieStore.get(SIDEBAR_COOKIE)?.value === 'pinned';
   const roleLabel =
     user.subsystemRole === 'USER'
       ? (CORE_ROLE_LABEL[user.coreRole] ?? SUBSYSTEM_ROLE_LABEL.USER)
@@ -97,20 +98,24 @@ async function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <ToastProvider>
-      <ReturnToRedirect />
       <CsmjuAppShell
         subsystemName={SUBSYSTEM_ID}
         displayName={DISPLAY_NAME}
         nav={navFor(user)}
-        user={{ displayName: user.displayName, email: user.email, roleLabel, avatarUrl: user.avatarUrl }}
+        user={{
+          displayName: user.displayName,
+          detail: user.personCode,
+          roleLabel,
+          avatarUrl: user.avatarUrl,
+        }}
         primaryAction={can(user, P.REQUEST_CREATE) ? { label: 'แจ้งซ่อม', href: '/requests/new' } : undefined}
         searchSlot={
           <CommandPalette canSeeAll={can(user, P.REQUEST_READ_ANY)} isAdmin={can(user, P.PROFILE_READ_ANY)} />
         }
-        notificationsSlot={<NotificationBell />}
+        notificationsSlot={can(user, P.JOB_ACCEPT) ? undefined : <NotificationBell />}
         homeHref={coreHubHomeUrl()}
-        logoutHref={process.env.NEXT_PUBLIC_CORE_HUB_LOGOUT_URL || (CORE_HUB_URL ? `${CORE_HUB_URL}/` : '/')}
-        loginHref={coreHubLoginUrl()}
+        logoutAction={LOGOUT_ACTION}
+        sessionExpiresAt={user.session.expiresAt}
         initialPinned={sidebarPinned}
       >
         {children}

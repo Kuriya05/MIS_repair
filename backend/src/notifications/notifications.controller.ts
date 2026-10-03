@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Param, Patch, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import type { CoreHubIdentity } from '../auth/core-hub-identity';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { RepairActor } from '../actor/repair-actor';
+import { CurrentActor } from '../actor/current-actor.decorator';
 import { RequirePermissions } from '../auth/decorators/require-permissions.decorator';
 import { Permission } from '../auth/permissions';
-import { ApiEnvelope, ApiErrors, ApiPageEnvelope } from '../common/swagger';
-import { UuidParam } from '../common/uuid.pipe';
+import { ApiEnvelope, ApiErrors, ApiPageEnvelope } from '../shared/swagger';
+import { UuidParam } from '../shared/uuid.pipe';
 import {
   ListNotificationsQueryDto,
   MarkAllNotificationsDto,
@@ -27,7 +27,7 @@ export class NotificationsController {
   @ApiOperation({ summary: 'การแจ้งเตือนของฉัน (ใหม่สุดก่อน)' })
   @ApiPageEnvelope(NotificationDto)
   @ApiErrors(400, 403)
-  list(@CurrentUser() user: CoreHubIdentity, @Query() query: ListNotificationsQueryDto) {
+  list(@CurrentActor() user: RepairActor, @Query() query: ListNotificationsQueryDto) {
     return this.notifications.list(user.coreUserId, query);
   }
 
@@ -36,7 +36,7 @@ export class NotificationsController {
   @ApiOperation({ summary: 'ทำเครื่องหมายว่าอ่านแล้วทั้งหมด' })
   @ApiEnvelope(MarkAllResultDto)
   @ApiErrors(400, 403)
-  markAll(@CurrentUser() user: CoreHubIdentity, @Body() _dto: MarkAllNotificationsDto) {
+  markAll(@CurrentActor() user: RepairActor, @Body() _dto: MarkAllNotificationsDto) {
     return this.notifications.markAllRead(user.coreUserId);
   }
 
@@ -46,7 +46,7 @@ export class NotificationsController {
   @ApiEnvelope(NotificationDto)
   @ApiErrors(400, 403, 404)
   update(
-    @CurrentUser() user: CoreHubIdentity,
+    @CurrentActor() user: RepairActor,
     @Param('id', UuidParam) id: string,
     @Body() dto: UpdateNotificationDto,
   ) {

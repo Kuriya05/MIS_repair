@@ -16,7 +16,7 @@ if (existsSync(rootEnv)) {
   }
 }
 
-const backend = (process.env.BACKEND_URL ?? 'http://localhost:3002').replace(/\/+$/, '');
+const backend = (process.env.BACKEND_URL ?? 'http://127.0.0.1:4221').replace(/\/+$/, '');
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -25,17 +25,21 @@ const nextConfig: NextConfig = {
   // ปุ่ม dev tools ของ Next.js (เฉพาะตอน dev) ย้ายไปขวาล่าง ไม่ให้บังปุ่มออกจากระบบในแถบเมนูซ้าย
   devIndicators: { position: 'bottom-right' },
   output: 'standalone',
-  // หน้าเว็บกับ API อยู่ origin เดียวกัน: คุกกี้ core_hub_access_token ถูกส่งไปกับทุกคำขอเอง
+  // frontend เป็นประตูเดียวของระบบ (connect-core-hub.md ข้อ 1): /api/* และ /auth/login · callback · logout
+  // ส่งต่อไป backend — คุกกี้ <ชื่อระบบ>_access_token จึงถูกส่งไปกับทุกคำขอเอง
   async rewrites() {
     return [
       { source: '/api/:path*', destination: `${backend}/api/:path*` },
-      { source: '/auth/:path*', destination: `${backend}/auth/:path*` },
+      { source: '/auth/login', destination: `${backend}/auth/login` },
+      { source: '/auth/callback', destination: `${backend}/auth/callback` },
+      { source: '/auth/logout', destination: `${backend}/auth/logout` },
     ];
   },
   async headers() {
     return [
       {
-        source: '/:path*',
+        // /auth/* ตั้ง Cache-Control และ Referrer-Policy: no-referrer เองที่ backend (URL ของ callback มี token)
+        source: '/((?!auth/).*)',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },

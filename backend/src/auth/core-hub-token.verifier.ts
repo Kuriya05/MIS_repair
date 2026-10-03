@@ -1,101 +1,190 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { decodeProtectedHeader, errors, jwtVerify, type JWTPayload } from 'jose';
-import { APP_CONFIG, JWT_ALGORITHM, type AppConfig } from '../config/configuration';
-import { logEvent, type FailureReason } from '../logging/log-event';
-import { TokenRejectedError } from './auth.errors';
-import type { VerifiedClaims } from './core-hub-identity';
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { decodeProtectedHeader, errors as joseErrors, jwtVerify } from 'jose';
+import { CoreHubTokenPayload } from './core-hub-identity';
 import { JwksService } from './jwks.service';
+import { TokenRejectionReason, TokenVerificationError } from './auth.errors';
+
+/** The Core Hub contract is immutable (spec §43). */
+const REQUIRED_ALGORITHM = 'RS256';
 
 /**
- * ตรวจ access token ของ Core Hub ครบ 8 ขั้น (auth-contract.md ข้อ 4) — ไม่ข้ามขั้นใดแม้ใน development
- *   1 ต้องมี token · 2 ถอด header อ่าน alg/kid · 3 alg ต้องเป็น RS256 เท่านั้น
- *   4 หา public key จาก JWKS ตาม kid · 5 ตรวจลายเซ็น (allow-list อัลกอริทึมซ้ำอีกชั้น)
- *   6 ตรวจ iss/aud · 7 ตรวจ exp (clock skew ≤ 60 วินาที) · 8 ต้องมี sub ที่ไม่ว่าง
- * ทุกกรณีที่ไม่ผ่าน → TokenRejectedError → 401
+ * Longest life an access token may have, from contracts/jwt-contract.json:
+ * `maxTokenLifetimeSeconds` (15 minutes) plus `clockToleranceSeconds`.
+ * A refresh token lives 7 days, so this is what keeps one from being used in
+ * place of an access token.
+ */
+const MAX_TOKEN_LIFETIME_SEC = 900;
+const TOKEN_LIFETIME_TOLERANCE_SEC = 60;
+
+/**
+ * Verifies a Core Hub access token - the ten steps of auth-contract 4:
+ *
+ *  1. a token was supplied           6. iss and aud
+ *  2. read alg and kid (untrusted)   7. exp (clock tolerance <= 60 s)
+ *  3. require alg = RS256            8. a non-empty sub
+ *  4. public key from JWKS by kid    9. iat present, exp - iat <= 900 + 60 s
+ *  5. signature, RS256 again        10. azp, when present, names this subsystem
+ *
+ * Claims outside the contract are ignored, never a reason to reject: Core Hub
+ * may add claims without breaking it.
  */
 @Injectable()
 export class CoreHubTokenVerifier {
   constructor(
     private readonly jwks: JwksService,
-    @Inject(APP_CONFIG) private readonly config: AppConfig,
+    private readonly config: ConfigService,
   ) {}
 
-  async verify(token: string | undefined, path: string, preset?: FailureReason): Promise<VerifiedClaims> {
-    try {
-      if (preset) throw new TokenRejectedError(preset);
-      return await this.verifySteps(token);
-    } catch (error) {
-      if (error instanceof TokenRejectedError) {
-        logEvent('jwt.verification.failure', { reason: error.reason, kid: error.kid ?? null, path });
-      }
-      throw error;
+  async verify(token: string): Promise<CoreHubTokenPayload> {
+    // Step 1: there is a token at all.
+    if (typeof token !== 'string' || token.trim().length === 0) {
+      throw new TokenVerificationError(TokenRejectionReason.MISSING_TOKEN, 'No token supplied');
     }
-  }
 
-  private async verifySteps(token: string | undefined): Promise<VerifiedClaims> {
-    // 1
-    if (!token) throw new TokenRejectedError('missing_token');
-
-    // 2 — อ่าน header อย่างเดียว ยังไม่เชื่อ payload
-    if (token.split('.').length !== 3) throw new TokenRejectedError('malformed_token');
+    // Step 2: inspect the (unverified) header only to learn alg and kid.
     let header: ReturnType<typeof decodeProtectedHeader>;
     try {
       header = decodeProtectedHeader(token);
     } catch {
-      throw new TokenRejectedError('malformed_token');
+      throw new TokenVerificationError(
+        TokenRejectionReason.MALFORMED_TOKEN,
+        'Token is not a well-formed JWT',
+      );
     }
 
-    // 3
-    if (header.alg !== JWT_ALGORITHM) throw new TokenRejectedError('unsupported_algorithm', header.kid);
+    // Step 3: `alg: none`, HS256 and every other algorithm are rejected outright.
+    if (header.alg !== REQUIRED_ALGORITHM) {
+      throw new TokenVerificationError(
+        TokenRejectionReason.UNSUPPORTED_ALGORITHM,
+        `Unsupported token algorithm: ${String(header.alg)}`,
+        header.kid,
+      );
+    }
 
-    // 4
-    if (!header.kid) throw new TokenRejectedError('missing_kid');
+    if (typeof header.kid !== 'string' || header.kid.length === 0) {
+      throw new TokenVerificationError(
+        TokenRejectionReason.MISSING_KID,
+        'Token header does not contain a key id',
+      );
+    }
+
+    // Step 4: resolve the public key for this kid (refreshing JWKS if needed).
     const key = await this.jwks.getKey(header.kid);
 
-    // 5–7
-    let payload: JWTPayload;
+    // Step 5-7: signature + registered claim validation, enforcing RS256 again.
+    // exp is required: a token without one would never expire.
+    let payload: CoreHubTokenPayload;
     try {
-      ({ payload } = await jwtVerify(token, key, {
-        algorithms: [JWT_ALGORITHM],
-        issuer: this.config.coreHub.issuer,
-        audience: this.config.coreHub.audience,
-        clockTolerance: this.config.clockToleranceSec,
-        requiredClaims: ['exp', 'iat'],
-      }));
+      const result = await jwtVerify(token, key, {
+        algorithms: [REQUIRED_ALGORITHM],
+        issuer: this.config.get<string>('coreHub.issuer', 'core-hub'),
+        audience: this.config.get<string>('coreHub.audience', 'csmju2030'),
+        clockTolerance: this.config.get<number>('coreHub.clockToleranceSec', 5),
+        requiredClaims: ['exp'],
+      });
+      payload = result.payload as unknown as CoreHubTokenPayload;
     } catch (error) {
-      throw new TokenRejectedError(classify(error), header.kid);
+      throw this.translate(error, header.kid);
     }
 
-    // 8
-    if (typeof payload.sub !== 'string' || payload.sub.trim() === '') {
-      throw new TokenRejectedError('invalid_claims', header.kid);
+    // Step 8: the subsystem also requires a usable subject.
+    if (typeof payload.sub !== 'string' || payload.sub.trim().length === 0) {
+      throw new TokenVerificationError(
+        TokenRejectionReason.INVALID_CLAIMS,
+        'Token has no subject claim',
+        header.kid,
+      );
     }
+
+    // Step 9: an access token lives 15 minutes. Without iat its lifetime is
+    // unknown, so that fails this step too.
+    if (typeof payload.iat !== 'number') {
+      throw new TokenVerificationError(
+        TokenRejectionReason.TOKEN_LIFETIME_EXCEEDED,
+        'Token has no issued-at claim, so its lifetime cannot be checked',
+        header.kid,
+      );
+    }
+    if ((payload.exp as number) - payload.iat > MAX_TOKEN_LIFETIME_SEC + TOKEN_LIFETIME_TOLERANCE_SEC) {
+      throw new TokenVerificationError(
+        TokenRejectionReason.TOKEN_LIFETIME_EXCEEDED,
+        'Token lives longer than a Core Hub access token',
+        header.kid,
+      );
+    }
+
+    // Step 10: a token Core Hub issued for another subsystem is not for us.
+    // Checked only when azp is present - a later standard makes it required.
+    if (payload.azp !== undefined && payload.azp !== this.subsystemId) {
+      throw new TokenVerificationError(
+        TokenRejectionReason.INVALID_AZP,
+        'Token was issued for another subsystem',
+        header.kid,
+      );
+    }
+
+    return payload;
+  }
+
+  private get subsystemId(): string {
+    return this.config.get<string>('subsystemId', 'csmju-demo-subsystem');
+  }
+
+  private translate(error: unknown, kid: string): TokenVerificationError {
+    if (error instanceof TokenVerificationError) {
+      return error;
+    }
+
+    if (error instanceof joseErrors.JWTExpired) {
+      return new TokenVerificationError(TokenRejectionReason.EXPIRED, 'Token has expired', kid);
+    }
+
+    if (error instanceof joseErrors.JWTClaimValidationFailed) {
+      if (error.claim === 'iat') {
+        // jose saw an iat that is not a number - step 9 cannot pass.
+        return new TokenVerificationError(
+          TokenRejectionReason.TOKEN_LIFETIME_EXCEEDED,
+          'Token issued-at claim is invalid',
+          kid,
+        );
+      }
+      if (error.claim === 'iss') {
+        return new TokenVerificationError(
+          TokenRejectionReason.INVALID_ISSUER,
+          'Token issuer is not the Core Hub',
+          kid,
+        );
+      }
+      if (error.claim === 'aud') {
+        return new TokenVerificationError(
+          TokenRejectionReason.INVALID_AUDIENCE,
+          'Token audience does not include this platform',
+          kid,
+        );
+      }
+      return new TokenVerificationError(
+        TokenRejectionReason.INVALID_CLAIMS,
+        `Token claim "${error.claim}" is invalid`,
+        kid,
+      );
+    }
+
     if (
-      typeof payload.role !== 'string' ||
-      typeof payload.email !== 'string' ||
-      typeof payload.exp !== 'number'
+      error instanceof joseErrors.JOSEError &&
+      error.code === 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED'
     ) {
-      throw new TokenRejectedError('invalid_claims', header.kid);
+      return new TokenVerificationError(
+        TokenRejectionReason.INVALID_SIGNATURE,
+        'Token signature verification failed',
+        kid,
+      );
     }
 
-    return {
-      sub: payload.sub,
-      email: payload.email,
-      role: payload.role,
-      sid: typeof payload.sid === 'string' ? payload.sid : undefined,
-      exp: payload.exp,
-    };
+    return new TokenVerificationError(
+      TokenRejectionReason.MALFORMED_TOKEN,
+      'Token could not be verified',
+      kid,
+    );
   }
-}
-
-function classify(error: unknown): FailureReason {
-  if (error instanceof errors.JWTExpired) return 'expired';
-  if (error instanceof errors.JWTClaimValidationFailed) {
-    if (error.claim === 'iss') return 'invalid_issuer';
-    if (error.claim === 'aud') return 'invalid_audience';
-    return 'invalid_claims';
-  }
-  if (error instanceof errors.JWSSignatureVerificationFailed) return 'invalid_signature';
-  if (error instanceof errors.JOSEAlgNotAllowed) return 'unsupported_algorithm';
-  return 'malformed_token';
 }

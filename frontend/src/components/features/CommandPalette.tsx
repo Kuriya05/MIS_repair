@@ -27,26 +27,63 @@ export function CommandPalette({ canSeeAll, isAdmin }: { canSeeAll: boolean; isA
   const trigger = useRef<HTMLButtonElement>(null);
 
   const pages = useMemo<Command[]>(() => {
-    const list: Command[] = [
-      { id: 'new', label: 'แจ้งซ่อม', hint: 'สร้างใบแจ้งซ่อมใหม่', href: '/requests/new' },
-      { id: 'mine', label: 'ใบแจ้งซ่อมของฉัน', href: '/requests' },
-      { id: 'notifications', label: 'การแจ้งเตือน', href: '/notifications' },
-      { id: 'profile', label: 'โปรไฟล์ของฉัน', href: '/profile' },
-    ];
+    // ผู้ดูแลระบบแจ้งซ่อมเองไม่ได้ · ช่าง/ผู้ดูแลดูความเคลื่อนไหวในแผงข้างบอร์ดงานซ่อมแทนหน้าการแจ้งเตือน
+    const list: Command[] = isAdmin
+      ? []
+      : [
+          {
+            id: 'new',
+            label: 'แจ้งซ่อม',
+            hint: 'เลือกห้องแล้วกดที่เครื่องที่เสีย',
+            href: '/buildings',
+          },
+          { id: 'mine', label: 'ใบแจ้งซ่อมของฉัน', href: '/requests' },
+        ];
+    list.push(
+      {
+        id: 'buildings',
+        label: 'อาคารและห้อง',
+        hint: 'ดูสถานะเครื่องในแต่ละห้อง',
+        href: '/buildings',
+      },
+      {
+        id: 'equipment',
+        label: 'ประเภทอุปกรณ์',
+        hint: 'อุปกรณ์ทุกเครื่องแยกตามประเภท',
+        href: '/equipment',
+      },
+    );
+    if (!canSeeAll) list.push({ id: 'notifications', label: 'การแจ้งเตือน', href: '/notifications' });
+    list.push({ id: 'profile', label: 'โปรไฟล์ของฉัน', href: '/profile' });
     if (canSeeAll) {
       list.push(
-        { id: 'queue', label: 'คิวงานซ่อม', hint: 'งานที่รอรับและงานของฉัน', href: '/queue' },
-        { id: 'overdue', label: 'งานที่เกินกำหนด', href: '/queue?tab=overdue' },
-        { id: 'stats', label: 'สถิติงานซ่อม', href: '/dashboard' },
+        {
+          id: 'board',
+          label: 'บอร์ดงานซ่อม',
+          hint: 'รับเรื่อง เปลี่ยนสถานะงาน และดูความเคลื่อนไหวล่าสุด',
+          href: '/board',
+        },
+        {
+          id: 'mine-jobs',
+          label: 'งานซ่อมของฉัน',
+          hint: 'บอร์ดงานเฉพาะงานที่ฉันรับผิดชอบ',
+          href: '/board?mine=1',
+        },
+        {
+          id: 'stats',
+          label: 'สถิติการแจ้งซ่อม',
+          hint: 'แยกตามห้องและอุปกรณ์ที่แจ้งบ่อย',
+          href: '/dashboard',
+        },
       );
     }
     if (isAdmin) {
-      list.push(
-        { id: 'users', label: 'ผู้ใช้และช่าง', href: '/admin/users' },
-        { id: 'buildings', label: 'อาคาร', href: '/admin/buildings' },
-        { id: 'categories', label: 'หมวดหมู่งานซ่อม', href: '/admin/categories' },
-        { id: 'qr', label: 'สติกเกอร์ QR', href: '/admin/qr-tags' },
-      );
+      list.push({
+        id: 'categories',
+        label: 'จัดการประเภทอุปกรณ์',
+        hint: 'เพิ่ม/แก้ไขประเภทและอาการที่พบบ่อย',
+        href: '/admin/categories',
+      });
     }
     return list;
   }, [canSeeAll, isAdmin]);

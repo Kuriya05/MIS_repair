@@ -1,7 +1,7 @@
 import type { RequestStatus } from '../../generated/prisma/enums';
-import type { CoreHubIdentity } from '../auth/core-hub-identity';
-import { Permission, type PermissionValue } from '../auth/permissions';
-import { conflict, forbidden } from '../common/api-error';
+import type { RepairActor } from '../actor/repair-actor';
+import { Permission } from '../auth/permissions';
+import { conflict, forbidden } from '../shared/errors';
 import { isOpen } from './sla';
 
 /**
@@ -64,9 +64,9 @@ export type WorkflowSubject = {
   rating: number | null;
 };
 
-type Actor = Pick<CoreHubIdentity, 'coreUserId' | 'permissions'>;
+type Actor = Pick<RepairActor, 'coreUserId' | 'permissions'>;
 
-const has = (actor: Actor, permission: PermissionValue) => actor.permissions.has(permission);
+const has = (actor: Actor, permission: Permission) => actor.permissions.has(permission);
 const isOwner = (actor: Actor, request: WorkflowSubject) => request.coreUserId === actor.coreUserId;
 const isAssignee = (actor: Actor, request: WorkflowSubject) =>
   request.assigneeCoreUserId === actor.coreUserId;
@@ -79,6 +79,23 @@ export function canRead(actor: Actor, request: WorkflowSubject) {
   return (
     has(actor, Permission.REPAIR_REQUEST_READ_ANY) ||
     (has(actor, Permission.REPAIR_REQUEST_READ_OWN) && isOwner(actor, request))
+  );
+}
+
+/**
+ * "ฉันก็เจอ" ได้ไหม — ไม่ใช่ผู้แจ้งเอง · ใบยังเปิดอยู่ · ยังไม่ได้กด
+ * (ผู้ติดตามอ่านใบนั้นได้และได้รับการแจ้งเตือนเหมือนผู้แจ้ง แต่ทำ action ของผู้แจ้งไม่ได้)
+ */
+export function canFollow(
+  actor: Actor,
+  request: Pick<WorkflowSubject, 'status' | 'coreUserId'>,
+  alreadyFollowing: boolean,
+) {
+  return (
+    has(actor, Permission.REPAIR_REQUEST_FOLLOW) &&
+    request.coreUserId !== actor.coreUserId &&
+    isOpen(request.status) &&
+    !alreadyFollowing
   );
 }
 

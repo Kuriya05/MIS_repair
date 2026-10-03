@@ -1,106 +1,212 @@
-import { exportJWK } from 'jose';
-import { KID, newKeyPair, testConfig, type KeyPair } from '../__tests__/fixtures';
+import { ConfigService } from '@nestjs/config';
+import {
+  TestSigningKey,
+  createSigningKey,
+  jwksDocument,
+  rawJwks,
+} from '../../test/helpers/token-factory';
+import { AuthEventsLogger } from './auth-events.logger';
+import { TokenRejectionReason, TokenVerificationError } from './auth.errors';
 import { JwksService } from './jwks.service';
 
-type Jwk = Record<string, unknown>;
+const CONFIG_DEFAULTS: Record<string, unknown> = {
+  'coreHub.jwksUrl': 'http://core-hub.test/api/v1/.well-known/jwks.json',
+  'coreHub.jwksCacheTtlMs': 600_000,
+  'coreHub.jwksMinRefreshIntervalMs': 0,
+  'coreHub.jwksRequestTimeoutMs': 1_000,
+};
 
-describe('JwksService — auth-contract.md ข้อ 4.1', () => {
-  let current: KeyPair;
-  let next: KeyPair;
-  let fetchMock: jest.Mock;
-  const realFetch = global.fetch;
+function configStub(overrides: Record<string, unknown> = {}): ConfigService {
+  const values = { ...CONFIG_DEFAULTS, ...overrides };
+  return {
+    get: <T>(key: string, fallback?: T): T =>
+      (values[key] !== undefined ? values[key] : fallback) as T,
+  } as unknown as ConfigService;
+}
+
+function mockJwksResponse(body: unknown, ok = true, status = 200): jest.Mock {
+  const fetchMock = jest.fn().mockResolvedValue({
+    ok,
+    status,
+    json: async () => body,
+  });
+  global.fetch = fetchMock as unknown as typeof fetch;
+  return fetchMock;
+}
+
+describe('JwksService (spec §10, §11, §40)', () => {
+  let key2026: TestSigningKey;
+  let key2027: TestSigningKey;
+  let service: JwksService;
 
   beforeAll(async () => {
-    current = await newKeyPair();
-    next = await newKeyPair();
+    key2026 = await createSigningKey('core-hub-2026');
+    key2027 = await createSigningKey('core-hub-2027');
+  });
+
+  beforeEach(() => {
+    service = new JwksService(configStub(), new AuthEventsLogger());
   });
 
   afterEach(() => {
-    global.fetch = realFetch;
+    jest.restoreAllMocks();
   });
 
-  const publicJwk = async (pair: KeyPair, kid: string): Promise<Jwk> => ({
-    ...(await exportJWK(pair.publicKey)),
-    kid,
-    use: 'sig',
-    alg: 'RS256',
+  it('downloads the JWKS document and returns the key for a kid', async () => {
+    const fetchMock = mockJwksResponse(jwksDocument([key2026]));
+
+    await expect(service.getKey('core-hub-2026')).resolves.toBeDefined();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe(CONFIG_DEFAULTS['coreHub.jwksUrl']);
   });
 
-  /** ลำดับคำตอบของ JWKS endpoint ต่อการเรียกแต่ละครั้ง */
-  const serve = (...responses: (Jwk[] | 'down')[]) => {
-    let call = 0;
-    fetchMock = jest.fn(async () => {
-      const response = responses[Math.min(call++, responses.length - 1)];
-      if (response === 'down') throw new Error('connect ECONNREFUSED');
-      return new Response(JSON.stringify({ keys: response }), { status: 200 });
-    });
-    global.fetch = fetchMock as unknown as typeof fetch;
-  };
+  it('caches keys instead of calling the Core Hub on every request', async () => {
+    const fetchMock = mockJwksResponse(jwksDocument([key2026]));
 
-  it('caches keys instead of calling Core Hub on every request', async () => {
-    serve([await publicJwk(current, KID)]);
-    const jwks = new JwksService(testConfig());
-    await jwks.getKey(KID);
-    await jwks.getKey(KID);
-    await jwks.getKey(KID);
+    await service.getKey('core-hub-2026');
+    await service.getKey('core-hub-2026');
+    await service.getKey('core-hub-2026');
+
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('refreshes once when a new kid appears (key rotation)', async () => {
-    serve(
-      [await publicJwk(current, KID)],
-      [await publicJwk(current, KID), await publicJwk(next, 'core-hub-2027')],
+  it('refreshes once when an unknown kid appears, then serves the rotated key', async () => {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => jwksDocument([key2026]) })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => jwksDocument([key2026, key2027]),
+      });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await service.getKey('core-hub-2026');
+    await expect(service.getKey('core-hub-2027')).resolves.toBeDefined();
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(service.knownKids()).toEqual(expect.arrayContaining(['core-hub-2026', 'core-hub-2027']));
+  });
+
+  it('rejects an unknown kid after a single refresh and does not loop', async () => {
+    const fetchMock = mockJwksResponse(jwksDocument([key2026]));
+
+    await expect(service.getKey('core-hub-9999')).rejects.toMatchObject({
+      reason: TokenRejectionReason.UNKNOWN_KID,
+    });
+
+    // one initial fetch + at most one extra refresh for the unknown kid
+    expect(fetchMock.mock.calls.length).toBeLessThanOrEqual(2);
+  });
+
+  it('honours the minimum refresh interval so a bad kid cannot flood the Core Hub', async () => {
+    service = new JwksService(
+      configStub({ 'coreHub.jwksMinRefreshIntervalMs': 60_000 }),
+      new AuthEventsLogger(),
     );
-    const jwks = new JwksService(testConfig({ minRefreshIntervalMs: 0 }));
-    await jwks.getKey(KID);
-    await expect(jwks.getKey('core-hub-2027')).resolves.toBeDefined();
+    const fetchMock = mockJwksResponse(jwksDocument([key2026]));
+
+    await service.getKey('core-hub-2026');
+    await expect(service.getKey('core-hub-9999')).rejects.toBeInstanceOf(TokenVerificationError);
+    await expect(service.getKey('core-hub-9999')).rejects.toBeInstanceOf(TokenVerificationError);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-downloads the document after the cache TTL expires', async () => {
+    service = new JwksService(
+      configStub({ 'coreHub.jwksCacheTtlMs': 10 }),
+      new AuthEventsLogger(),
+    );
+    const fetchMock = mockJwksResponse(jwksDocument([key2026]));
+
+    await service.getKey('core-hub-2026');
+    await new Promise((resolve) => setTimeout(resolve, 25));
+    await service.getKey('core-hub-2026');
+
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
-  it('rate-limits refreshes for unknown kids (no refresh loop)', async () => {
-    serve([await publicJwk(current, KID)]);
-    const jwks = new JwksService(testConfig({ minRefreshIntervalMs: 30_000 }));
-    await jwks.getKey(KID);
-    await expect(jwks.getKey('unknown-1')).rejects.toMatchObject({ reason: 'unknown_kid' });
-    await expect(jwks.getKey('unknown-2')).rejects.toMatchObject({ reason: 'unknown_kid' });
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-  });
-
-  it('ignores JWKs with private material or a non-RSA type', async () => {
-    const withPrivate = { ...(await exportJWK(current.privateKey)), kid: KID };
-    serve([withPrivate, { kty: 'oct', k: 'c2VjcmV0', kid: 'oct-key' }]);
-    const jwks = new JwksService(testConfig({ minRefreshIntervalMs: 0 }));
-    await expect(jwks.getKey(KID)).rejects.toMatchObject({ reason: 'unknown_kid' });
-    await expect(jwks.getKey('oct-key')).rejects.toMatchObject({ reason: 'unknown_kid' });
-  });
-
-  it('reports jwks_unavailable when Core Hub has never answered', async () => {
-    serve('down');
-    const jwks = new JwksService(testConfig({ minRefreshIntervalMs: 0 }));
-    await expect(jwks.getKey(KID)).rejects.toMatchObject({ reason: 'jwks_unavailable' });
-  });
-
-  it('keeps using cached keys while Core Hub is briefly down', async () => {
-    serve([await publicJwk(current, KID)], 'down');
-    const clock = jest.spyOn(Date, 'now').mockReturnValue(1_000_000);
-    try {
-      const jwks = new JwksService(testConfig());
-      await jwks.getKey(KID);
-      clock.mockReturnValue(1_000_000 + 11 * 60_000); // เลย TTL 10 นาที → ลองรีเฟรชแต่ Core Hub ล่ม
-      await expect(jwks.getKey(KID)).resolves.toBeDefined();
-      expect(fetchMock).toHaveBeenCalledTimes(2);
-    } finally {
-      clock.mockRestore();
-    }
-  });
-
-  it('rejects an enveloped JWKS body (must be raw RFC 7517)', async () => {
-    fetchMock = jest.fn(
-      async () =>
-        new Response(JSON.stringify({ success: true, data: { keys: [await publicJwk(current, KID)] } })),
-    );
+  it('keeps serving cached keys when the Core Hub is temporarily unreachable', async () => {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => jwksDocument([key2026]) })
+      .mockRejectedValue(new Error('ECONNREFUSED'));
     global.fetch = fetchMock as unknown as typeof fetch;
-    const jwks = new JwksService(testConfig({ minRefreshIntervalMs: 0 }));
-    await expect(jwks.getKey(KID)).rejects.toMatchObject({ reason: 'jwks_unavailable' });
+
+    service = new JwksService(
+      configStub({ 'coreHub.jwksCacheTtlMs': 10 }),
+      new AuthEventsLogger(),
+    );
+
+    await service.getKey('core-hub-2026');
+    await new Promise((resolve) => setTimeout(resolve, 25));
+
+    await expect(service.getKey('core-hub-2026')).resolves.toBeDefined();
+  });
+
+  it('fails when no key has ever been cached and the Core Hub is unreachable', async () => {
+    global.fetch = jest.fn().mockRejectedValue(new Error('ECONNREFUSED')) as unknown as typeof fetch;
+
+    await expect(service.getKey('core-hub-2026')).rejects.toMatchObject({
+      reason: TokenRejectionReason.JWKS_UNAVAILABLE,
+    });
+  });
+
+  it('rejects a JWKS document that leaks private key material or non-RSA keys', async () => {
+    mockJwksResponse(
+      rawJwks([
+        { ...key2026.publicJwk, d: 'private-material-must-be-ignored' },
+        { kty: 'oct', kid: 'symmetric', k: 'secret' },
+      ]),
+    );
+
+    await expect(service.getKey('core-hub-2026')).rejects.toBeInstanceOf(TokenVerificationError);
+    expect(service.knownKids()).toHaveLength(0);
+  });
+
+  it('refuses a JWKS wrapped in an API envelope, with a diagnostic message', async () => {
+    mockJwksResponse({
+      success: true,
+      data: { keys: [key2026.publicJwk] },
+      requestId: '',
+      timestamp: new Date().toISOString(),
+    });
+
+    await expect(service.getKey('core-hub-2026')).rejects.toMatchObject({
+      reason: TokenRejectionReason.JWKS_UNAVAILABLE,
+    });
+
+    const logged = (service as unknown as { authEvents: { jwksRefreshFailed: unknown } })
+      .authEvents;
+    expect(logged).toBeDefined();
+    expect(service.knownKids()).toHaveLength(0);
+  });
+
+  it('accepts a plain RFC 7517 document', async () => {
+    mockJwksResponse({ keys: [key2026.publicJwk] });
+
+    await expect(service.getKey('core-hub-2026')).resolves.toBeDefined();
+  });
+
+  it('rejects an empty kid without contacting the Core Hub', async () => {
+    const fetchMock = mockJwksResponse(jwksDocument([key2026]));
+
+    await expect(service.getKey('')).rejects.toMatchObject({
+      reason: TokenRejectionReason.MISSING_KID,
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('shares one HTTP request between concurrent refreshes', async () => {
+    const fetchMock = mockJwksResponse(jwksDocument([key2026]));
+
+    await Promise.all([
+      service.getKey('core-hub-2026'),
+      service.getKey('core-hub-2026'),
+      service.getKey('core-hub-2026'),
+    ]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

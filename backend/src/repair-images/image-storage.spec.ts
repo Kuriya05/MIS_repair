@@ -1,8 +1,8 @@
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { testConfig } from '../__tests__/fixtures';
-import { ApiError } from '../common/api-error';
+import type { ConfigService } from '@nestjs/config';
+import { ApiError } from '../shared/errors';
 import { ImageStorage, MAX_IMAGE_BYTES, sniffImage } from './image-storage';
 
 const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
@@ -30,7 +30,7 @@ describe('ImageStorage', () => {
 
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), 'repair-images-'));
-    storage = new ImageStorage({ ...testConfig(), uploadDir: dir });
+    storage = new ImageStorage({ get: () => dir } as unknown as ConfigService);
   });
   afterEach(() => rm(dir, { recursive: true, force: true }));
 

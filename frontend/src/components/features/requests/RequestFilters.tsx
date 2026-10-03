@@ -63,7 +63,7 @@ export function RequestFilters({
     : params.get('state')
       ? `state:${params.get('state')}`
       : '';
-  const hasFilters = ['q', 'status', 'state', 'priority', 'buildingId', 'categoryId'].some((key) =>
+  const hasFilters = ['q', 'status', 'state', 'priority', 'buildingCode', 'categoryId'].some((key) =>
     params.get(key),
   );
 
@@ -116,8 +116,8 @@ export function RequestFilters({
       <Select
         id={ids.building}
         label="อาคาร"
-        value={params.get('buildingId') ?? ''}
-        onChange={(value) => update({ buildingId: value })}
+        value={params.get('buildingCode') ?? ''}
+        onChange={(value) => update({ buildingCode: value })}
         options={[{ value: '', label: 'ทุกอาคาร' }, ...buildings]}
       />
       <Select

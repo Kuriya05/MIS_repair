@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useId, useRef, useState, type ComponentType, type ReactNode } from 'react';
 import { UNAUTHORIZED_EVENT } from '@/lib/api';
+import { loginHref } from '@/lib/config';
+import { currentPath, hasUnsavedForm, startReSso } from '@/lib/sso';
 import { CsmjuLogo } from './CsmjuLogo';
 import { Avatar } from './Avatar';
 import * as Icons from './icons';
@@ -19,13 +21,20 @@ export type ShellNavItem = {
   icon: ShellIcon;
   exact?: boolean;
 };
-export type ShellUser = { displayName: string; email: string; roleLabel: string; avatarUrl?: string | null };
+/** detail = บรรทัดรองใต้ชื่อ (รหัสบุคคล) · ระบบนี้ไม่เก็บและไม่แสดงอีเมล */
+export type ShellUser = {
+  displayName: string;
+  detail?: string | null;
+  roleLabel: string;
+  avatarUrl?: string | null;
+};
 
 const ICONS = {
   dashboard: Icons.DashboardIcon,
   assignment: Icons.AssignmentIcon,
   add: Icons.AddIcon,
   inbox: Icons.InboxIcon,
+  board: Icons.BoardIcon,
   chart: Icons.ChartIcon,
   qr: Icons.QrCodeIcon,
   notifications: Icons.NotificationsIcon,
@@ -36,14 +45,17 @@ const ICONS = {
   build: Icons.BuildIcon,
 } satisfies Record<string, ComponentType<IconProps>>;
 
-const REDIRECT_GUARD_KEY = 'csmju-sso-redirects';
+/** ต่ออายุล่วงหน้าตอนเปลี่ยนหน้า ถ้า token จะหมดภายในเวลานี้ (auth-contract.md ข้อ 7) */
+const RENEW_BEFORE_MS = 60_000;
 const focusRingOnDark =
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
 
 /**
  * โครงหน้าจอกลางของทุกระบบย่อย (ui-design-system.md ข้อ 5.1) — stand-in ของ `CsmjuAppShell` ใน template
  * sidebar brand-gradient 256px · top bar 64px · drawer บนมือถือ · skip link · ปุ่มออกจากระบบล่าง sidebar
- * 401: พาไปเข้าสู่ระบบใหม่ที่ Core Hub โดยไม่แสดงข้อความให้ผู้ใช้ (ข้อ 9.3) พร้อมกันวน redirect ไม่รู้จบ
+ * 401: silent re-SSO ผ่าน /auth/login?next=<หน้านี้> (auth-contract.md 1.2 ข้อ 7) พร้อมกันวน 30 วินาที
+ *      หน้าที่มีฟอร์มกรอกค้างไม่ถูก redirect ทับ — ขึ้นแถบให้ต่ออายุในแท็บใหม่แทน
+ * ออกจากระบบ = POST /auth/logout (ออกทั้ง Core Hub ไม่ใช่แค่ระบบนี้)
  *
  * ตามคำขอของเจ้าของระบบ: บนจอ md+ sidebar ย่อเป็นแถบไอคอน 72px และกางเต็ม 256px เมื่อชี้เมาส์
  * หรือกด Tab เข้ามา (กางทับเนื้อหา ไม่ดันหน้า) · ปุ่ม "ตรึงแถบเมนู" กลับเป็นแบบมาตรฐานที่กางตลอด
@@ -58,8 +70,8 @@ export function CsmjuAppShell({
   searchSlot,
   notificationsSlot,
   homeHref,
-  logoutHref,
-  loginHref,
+  logoutAction,
+  sessionExpiresAt,
   initialPinned = false,
   children,
 }: {
@@ -71,8 +83,9 @@ export function CsmjuAppShell({
   searchSlot?: ReactNode;
   notificationsSlot?: ReactNode;
   homeHref: string;
-  logoutHref: string;
-  loginHref: string;
+  logoutAction: string;
+  /** ISO 8601 จาก GET /api/v1/me — ใช้ต่ออายุล่วงหน้าตอนเปลี่ยนหน้า */
+  sessionExpiresAt?: string;
   initialPinned?: boolean;
   children: ReactNode;
 }) {
@@ -81,6 +94,8 @@ export function CsmjuAppShell({
   const [pinned, setPinned] = useState(initialPinned);
   const [hovered, setHovered] = useState(false);
   const [keyboardFocus, setKeyboardFocus] = useState(false);
+  /** session หมดระหว่างกรอกฟอร์ม · หรือ re-SSO วนกลับมาแล้วยัง 401 */
+  const [sessionNotice, setSessionNotice] = useState<'unsaved' | 'retry' | null>(null);
   const hoverTimer = useRef<number | undefined>(undefined);
   const expanded = pinned || hovered || keyboardFocus;
 
@@ -107,25 +122,22 @@ export function CsmjuAppShell({
 
   useEffect(() => {
     const onUnauthorized = () => {
-      if (!loginHref) return;
-      // ถ้าถูกส่งกลับมาแล้วยัง 401 ซ้ำหลายครั้งใน 1 นาที ให้หยุดและปล่อยให้หน้า session หมดอายุแสดงแทน
-      let recent: number[] = [];
-      try {
-        recent = JSON.parse(sessionStorage.getItem(REDIRECT_GUARD_KEY) ?? '[]');
-      } catch {
-        recent = [];
-      }
-      recent = recent.filter((at) => Date.now() - at < 60_000);
-      if (recent.length >= 2) {
-        window.location.reload();
+      if (hasUnsavedForm()) {
+        setSessionNotice('unsaved');
         return;
       }
-      sessionStorage.setItem(REDIRECT_GUARD_KEY, JSON.stringify([...recent, Date.now()]));
-      window.location.assign(loginHref);
+      if (!startReSso()) setSessionNotice('retry');
     };
     window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
     return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
-  }, [loginHref]);
+  }, []);
+
+  // ต่ออายุล่วงหน้าตอนเปลี่ยนหน้า (ยังไม่มีอะไรกรอกค้างในหน้าใหม่) — ผู้ใช้ไม่เจอ 401 กลางฟอร์ม
+  useEffect(() => {
+    if (!sessionExpiresAt) return;
+    const left = new Date(sessionExpiresAt).getTime() - Date.now();
+    if (left < RENEW_BEFORE_MS && !hasUnsavedForm()) startReSso();
+  }, [pathname, sessionExpiresAt]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -225,10 +237,12 @@ export function CsmjuAppShell({
             <Icons.HomeIcon className="h-4 w-4 shrink-0" />
             <span className={label}>กลับหน้าหลัก</span>
           </a>
-          <a href={logoutHref} className={onDarkItem}>
-            <Icons.LogoutIcon className="h-4 w-4 shrink-0" />
-            <span className={label}>ออกจากระบบ</span>
-          </a>
+          <form method="post" action={logoutAction}>
+            <button type="submit" className={onDarkItem}>
+              <Icons.LogoutIcon className="h-4 w-4 shrink-0" />
+              <span className={label}>ออกจากระบบ</span>
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -313,9 +327,11 @@ export function CsmjuAppShell({
           <div className="flex flex-1 justify-end md:justify-center">{searchSlot}</div>
           <div className="flex items-center gap-1">
             {notificationsSlot}
-            <UserMenu user={user} homeHref={homeHref} logoutHref={logoutHref} />
+            <UserMenu user={user} homeHref={homeHref} logoutAction={logoutAction} />
           </div>
         </header>
+
+        {sessionNotice ? <SessionNotice kind={sessionNotice} onClose={() => setSessionNotice(null)} /> : null}
 
         <main
           id="main"
@@ -393,7 +409,15 @@ function ScrollArea({
  * เมนูผู้ใช้บน top bar — แสดงแค่ avatar (ตามคำขอของเจ้าของระบบ) กดแล้วจึงเห็นชื่อ อีเมล บทบาท และเมนู
  * คีย์บอร์ด: Enter/Space เปิด · ลูกศรขึ้น-ลง/Home/End เลือก · Esc ปิดแล้วโฟกัสกลับที่ avatar
  */
-function UserMenu({ user, homeHref, logoutHref }: { user: ShellUser; homeHref: string; logoutHref: string }) {
+function UserMenu({
+  user,
+  homeHref,
+  logoutAction,
+}: {
+  user: ShellUser;
+  homeHref: string;
+  logoutAction: string;
+}) {
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const wrapper = useRef<HTMLDivElement>(null);
@@ -460,7 +484,9 @@ function UserMenu({ user, homeHref, logoutHref }: { user: ShellUser; homeHref: s
             <Avatar name={user.displayName} src={user.avatarUrl} size={48} />
             <div className="min-w-0">
               <p className="truncate text-label-md text-on-surface">{user.displayName}</p>
-              <p className="truncate text-caption text-on-surface-variant">{user.email}</p>
+              {user.detail ? (
+                <p className="truncate text-caption text-on-surface-variant">{user.detail}</p>
+              ) : null}
               <p className="mt-1.5 inline-flex rounded-full bg-primary-container/10 px-2.5 py-0.5 text-label-sm text-primary-container">
                 {user.roleLabel}
               </p>
@@ -483,17 +509,57 @@ function UserMenu({ user, homeHref, logoutHref }: { user: ShellUser; homeHref: s
               กลับหน้าหลัก
             </a>
             <div role="separator" className="my-1 h-px bg-outline-variant/40" />
-            <a
-              role="menuitem"
-              href={logoutHref}
-              className="flex min-h-11 items-center gap-3 px-4 text-body-md text-error outline-offset-[-2px] transition-colors hover:bg-error-container/60 focus-visible:bg-error-container/60"
-            >
-              <Icons.LogoutIcon className="h-5 w-5" />
-              ออกจากระบบ
-            </a>
+            <form method="post" action={logoutAction}>
+              <button
+                role="menuitem"
+                type="submit"
+                className="flex min-h-11 w-full items-center gap-3 px-4 text-body-md text-error outline-offset-[-2px] transition-colors hover:bg-error-container/60 focus-visible:bg-error-container/60"
+              >
+                <Icons.LogoutIcon className="h-5 w-5" />
+                ออกจากระบบ
+              </button>
+            </form>
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * แถบแจ้งเมื่อ session หมด — ไม่ redirect ทับฟอร์มที่กรอกค้าง (auth-contract.md 1.2 ข้อ 7)
+ * unsaved: ต่ออายุในแท็บใหม่แล้วกลับมากดส่งในหน้านี้ได้ (คุกกี้ใช้ร่วมกันทุกแท็บ)
+ * retry: re-SSO วนกลับมาแล้วยัง 401 ภายใน 30 วินาที — ให้ผู้ใช้กดเอง
+ */
+function SessionNotice({ kind, onClose }: { kind: 'unsaved' | 'retry'; onClose: () => void }) {
+  return (
+    <div
+      role="alert"
+      className="flex flex-wrap items-center gap-3 border-b border-error/30 bg-error-container px-4 py-3 text-body-md text-on-error-container md:px-12 print:hidden"
+    >
+      <p className="min-w-0 flex-1">
+        {kind === 'unsaved'
+          ? 'เซสชันหมดอายุ ข้อมูลที่กรอกไว้ยังอยู่ — กด “ต่ออายุในแท็บใหม่” แล้วกลับมากดส่งอีกครั้ง'
+          : 'ยังเข้าสู่ระบบไม่สำเร็จ กรุณากดเข้าสู่ระบบอีกครั้ง'}
+      </p>
+      {kind === 'unsaved' ? (
+        <a
+          href={loginHref()}
+          target="_blank"
+          rel="noopener"
+          onClick={onClose}
+          className="rounded-full bg-error px-4 py-2 text-label-md text-on-primary hover:opacity-90"
+        >
+          ต่ออายุในแท็บใหม่
+        </a>
+      ) : (
+        <a
+          href={loginHref(currentPath())}
+          className="rounded-full bg-error px-4 py-2 text-label-md text-on-primary hover:opacity-90"
+        >
+          เข้าสู่ระบบอีกครั้ง
+        </a>
+      )}
     </div>
   );
 }

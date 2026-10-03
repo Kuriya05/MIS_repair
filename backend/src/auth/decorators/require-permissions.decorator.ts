@@ -1,8 +1,12 @@
 import { SetMetadata } from '@nestjs/common';
-import type { PermissionValue } from '../permissions';
+import { Permission } from '../permissions';
 
-export const REQUIRED_PERMISSIONS = 'csmju:requiredPermissions';
+export const PERMISSIONS_KEY = 'auth:permissions';
 
-/** ต้องมี permission อย่างน้อยหนึ่งข้อ — service ต้องตรวจ ownership (:own) กับข้อมูลจริงต่ออีกชั้น */
-export const RequirePermissions = (...permissions: PermissionValue[]) =>
-  SetMetadata(REQUIRED_PERMISSIONS, permissions);
+/**
+ * Declares the permissions a route needs. The request passes when the caller's
+ * subsystem role holds AT LEAST ONE of them (e.g. `read:any` OR `read:own`);
+ * the service then narrows `:own` access against the actual business record.
+ */
+export const RequirePermissions = (...permissions: Permission[]) =>
+  SetMetadata(PERMISSIONS_KEY, permissions);

@@ -4,15 +4,14 @@
  */
 
 export interface paths {
-  '/api/health': {
+  '/api/v1/me': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** ตรวจสถานะระบบ (public) */
-    get: operations['Health_health'];
+    get: operations['Me_me'];
     put?: never;
     post?: never;
     delete?: never;
@@ -21,25 +20,88 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/me': {
+  '/auth/login': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** ตัวตนของผู้เรียก + role/permission ในระบบนี้ */
-    get: operations['Me_me'];
+    get: operations['Sso_login'];
     put?: never;
     post?: never;
     delete?: never;
     options?: never;
     head?: never;
-    /** แก้ข้อมูลติดต่อของตัวเอง (ชื่อที่แสดง เบอร์โทร หน่วยงาน) */
-    patch: operations['Me_update'];
+    patch?: never;
     trace?: never;
   };
-  '/api/v1/me/avatar': {
+  '/auth/callback': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Sso_callback'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['Sso_logout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/health': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['Health_check'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/profiles/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** ผู้เรียกในมุมของระบบแจ้งซ่อม (ชื่อจาก Core Hub · role ที่ใช้จริง · สิทธิ์ · รูป) */
+    get: operations['Profiles_me'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/profiles/me/avatar': {
     parameters: {
       query?: never;
       header?: never;
@@ -49,9 +111,9 @@ export interface paths {
     get?: never;
     put?: never;
     /** เปลี่ยนรูปโปรไฟล์ของตัวเอง (JPG · PNG · WebP ไม่เกิน 2 MB ในช่อง avatar) */
-    post: operations['Me_uploadAvatar'];
+    post: operations['Profiles_uploadAvatar'];
     /** ลบรูปโปรไฟล์ของตัวเอง (กลับไปใช้อักษรย่อ) */
-    delete: operations['Me_removeAvatar'];
+    delete: operations['Profiles_removeAvatar'];
     options?: never;
     head?: never;
     patch?: never;
@@ -64,9 +126,43 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** ผู้ใช้ที่เคยเข้าระบบนี้ */
+    /** ผู้ที่เคยเข้าระบบนี้ตาม role (ใช้เลือกช่างตอนมอบหมายงาน) */
     get: operations['Profiles_list'];
     put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/profiles/people': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** รายชื่อนักศึกษา/บุคลากรจาก Core Hub + จำนวนใบแจ้งซ่อมในระบบนี้ */
+    get: operations['Profiles_people'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/profiles/technicians/{personCode}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** แต่งตั้ง/ถอดถอนช่างซ่อมบำรุง (บุคลากรสายสนับสนุนจาก Core Hub) */
+    put: operations['Profiles_setTechnician'];
     post?: never;
     delete?: never;
     options?: never;
@@ -89,23 +185,6 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
-    trace?: never;
-  };
-  '/api/v1/profiles/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** แต่งตั้ง/ถอดถอนช่างซ่อมบำรุง */
-    patch: operations['Profiles_update'];
     trace?: never;
   };
   '/api/v1/repair-images/{id}/file': {
@@ -132,34 +211,176 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** รายการอาคาร */
+    /** รายการอาคาร (จาก Core Hub) */
     get: operations['Buildings_list'];
     put?: never;
-    /** เพิ่มอาคาร */
-    post: operations['Buildings_create'];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  '/api/v1/buildings/{id}': {
+  '/api/v1/buildings/{code}': {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** ข้อมูลอาคาร */
+    /** ข้อมูลอาคารตาม code ของ Core Hub */
     get: operations['Buildings_get'];
     put?: never;
     post?: never;
-    /** ลบอาคารที่ยังไม่มีข้อมูลอ้างถึง */
-    delete: operations['Buildings_remove'];
+    delete?: never;
     options?: never;
     head?: never;
-    /** แก้ไขอาคาร / เปิด-ปิดการใช้งาน */
-    patch: operations['Buildings_update'];
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/rooms': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** ห้องทั้งหมด (กรองตามอาคาร) พร้อมสรุปสถานะเครื่องในห้อง */
+    get: operations['Rooms_list'];
+    put?: never;
+    /** เพิ่มห้อง (ระบบสุ่มรหัส QR ของห้องให้) */
+    post: operations['Rooms_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/rooms/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** ห้อง + เครื่องทั้งหมดในห้องพร้อมสถานะ (แจ้งแล้ว / กำลังซ่อม / รออะไหล่) */
+    get: operations['Rooms_get'];
+    put?: never;
+    post?: never;
+    /** ลบห้องที่ยังไม่มีเครื่องและใบแจ้งซ่อม */
+    delete: operations['Rooms_remove'];
+    options?: never;
+    head?: never;
+    /** แก้ไขห้อง / เปิด-ปิดการใช้งาน */
+    patch: operations['Rooms_update'];
+    trace?: never;
+  };
+  '/api/v1/rooms/{id}/photo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** ไฟล์รูปห้อง (image/jpeg · image/png · image/webp) */
+    get: operations['Rooms_roomPhoto'];
+    put?: never;
+    /** อัปโหลด/เปลี่ยนรูปห้อง (JPG · PNG · WebP ไม่เกิน 5 MB ในช่อง photo) */
+    post: operations['Rooms_uploadRoomPhoto'];
+    /** ลบรูปห้อง */
+    delete: operations['Rooms_removeRoomPhoto'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/rooms/{id}/equipment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** เพิ่มเครื่องในห้อง (ใส่ count เพื่อเพิ่มหลายเครื่อง เช่น PC-01 ถึง PC-30) */
+    post: operations['Rooms_addEquipment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/equipment': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** ทะเบียนครุภัณฑ์ — เครื่องทุกห้อง (กรองตามอาคาร/ห้อง/ประเภท/คำค้น) ไม่แบ่งหน้า สูงสุด 2000 แถว */
+    get: operations['Rooms_inventory'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/equipment/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** ข้อมูลเครื่อง + สถานะ + ประวัติการแจ้งซ่อม */
+    get: operations['Rooms_getEquipment'];
+    put?: never;
+    post?: never;
+    /** ลบเครื่องที่ยังไม่เคยแจ้งซ่อม */
+    delete: operations['Rooms_removeEquipment'];
+    options?: never;
+    head?: never;
+    /** แก้ไขเครื่อง / ย้ายห้อง / เปิด-ปิดการใช้งาน */
+    patch: operations['Rooms_updateEquipment'];
+    trace?: never;
+  };
+  '/api/v1/equipment/{id}/photo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** ไฟล์รูปเครื่อง (image/jpeg · image/png · image/webp) */
+    get: operations['Rooms_equipmentPhoto'];
+    put?: never;
+    /** อัปโหลด/เปลี่ยนรูปเครื่อง (JPG · PNG · WebP ไม่เกิน 5 MB ในช่อง photo) */
+    post: operations['Rooms_uploadEquipmentPhoto'];
+    /** ลบรูปเครื่อง */
+    delete: operations['Rooms_removeEquipmentPhoto'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/qr-codes/{code}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** สแกน QR — รหัสนี้เป็นของห้องหรือเครื่องไหน */
+    get: operations['Rooms_resolveQr'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   '/api/v1/categories': {
@@ -212,6 +433,57 @@ export interface paths {
     /** แจ้งซ่อม (แนบรูปได้สูงสุด 5 รูปในช่อง photos) */
     post: operations['RepairRequests_create'];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/repair-requests/similar': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** ใบที่ยังเปิดอยู่และน่าจะเป็นเรื่องเดียวกัน (ใช้ตอนกรอกฟอร์มแจ้งซ่อม) */
+    get: operations['RepairRequests_similar'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/repair-requests/{id}/followers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** "ฉันก็เจอ" — ติดตามใบแจ้งซ่อมเดิมแทนการแจ้งซ้ำ */
+    post: operations['RepairRequests_follow'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/repair-requests/{id}/followers/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** เลิกติดตามใบแจ้งซ่อมที่กด "ฉันก็เจอ" ไว้ */
+    delete: operations['RepairRequests_unfollow'];
     options?: never;
     head?: never;
     patch?: never;
@@ -372,43 +644,6 @@ export interface paths {
     patch: operations['Notifications_update'];
     trace?: never;
   };
-  '/api/v1/qr-tags': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** รายการสติกเกอร์ QR (?code= สำหรับหน้าสแกน) */
-    get: operations['QrTags_list'];
-    put?: never;
-    /** สร้างสติกเกอร์ QR (ระบบสุ่มรหัส 8 ตัวให้) */
-    post: operations['QrTags_create'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/qr-tags/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** ข้อมูลสติกเกอร์ QR */
-    get: operations['QrTags_get'];
-    put?: never;
-    post?: never;
-    /** ลบสติกเกอร์ (ใบแจ้งซ่อมเดิมยังอยู่) */
-    delete: operations['QrTags_remove'];
-    options?: never;
-    head?: never;
-    /** แก้ไขสถานที่/อุปกรณ์ของสติกเกอร์ (รหัสเดิม ไม่ต้องพิมพ์ใหม่) */
-    patch: operations['QrTags_update'];
-    trace?: never;
-  };
   '/api/v1/statistics': {
     parameters: {
       query?: never;
@@ -430,15 +665,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
-    HealthDto: {
-      /** @enum {string} */
-      status: 'ok';
-      /**
-       * @description ต้องตรงกับ name ใน subsystem.yaml
-       * @example csmju-repair
-       */
-      service: string;
-    };
     /** @enum {string} */
     ErrorCode:
       | 'BAD_REQUEST'
@@ -447,7 +673,9 @@ export interface components {
       | 'FORBIDDEN'
       | 'NOT_FOUND'
       | 'CONFLICT'
-      | 'INTERNAL_ERROR';
+      | 'TOO_MANY_REQUESTS'
+      | 'INTERNAL_ERROR'
+      | 'SERVICE_UNAVAILABLE';
     ErrorBodyDto: {
       code: components['schemas']['ErrorCode'];
       /** @description ข้อความภาษาไทยที่แสดงให้ผู้ใช้ได้ทันที */
@@ -459,66 +687,52 @@ export interface components {
       success: false;
       error: components['schemas']['ErrorBodyDto'];
     };
-    MeDto: {
+    SessionDto: {
+      /**
+       * Format: date-time
+       * @description token หมดอายุเมื่อไร — ต่ออายุล่วงหน้าผ่าน /auth/login
+       */
+      expiresAt: string;
+    };
+    MyProfileDto: {
       /**
        * @description เท่ากับ claim `sub` ของ token
        * @example user-003
        */
       id: string;
-      /** @example staff@core.local */
-      email: string;
       /**
        * @description เท่ากับ claim `role` ของ token
        * @enum {string}
        */
-      coreRole: 'student' | 'alumni' | 'staff' | 'admin';
-      /** @enum {string} */
+      coreRole: 'student' | 'alumni' | 'staff' | 'lecturer' | 'guest' | 'admin';
+      /**
+       * @description role ที่ใช้จริง (รวมการแต่งตั้งช่าง)
+       * @enum {string}
+       */
       subsystemRole: 'USER' | 'TECHNICIAN' | 'ADMIN';
       /**
        * @example [
-       *       "repair-request:create",
-       *       "repair-request:read:own"
+       *       "repair-request:create"
        *     ]
        */
       permissions: string[];
+      /** @description รหัสนักศึกษา/บุคลากรจาก Core Hub (GET /people/me) · null = บัญชียังไม่ผูกกับบุคคลในทะเบียน */
+      personCode: string | null;
       /**
-       * @description ถ้ายังไม่ตั้งชื่อ จะใช้ส่วนหน้าของอีเมล
-       * @example สมชาย ใจดี
+       * @description ชื่อจาก Core Hub (GET /people/me) · ดูไม่ได้ = รหัส
+       * @example นายสมชาย ใจดี
        */
       displayName: string;
-      /** @description false = ยังไม่ได้ตั้งชื่อที่แสดง (ควรชวนผู้ใช้กรอกโปรไฟล์) */
-      hasDisplayName: boolean;
-      phone: string | null;
-      workUnit: string | null;
+      /** @description false = ชื่อด้านบนไม่ได้มาจาก Core Hub */
+      nameFromCoreHub: boolean;
       /** @description รูปโปรไฟล์ (GET ได้เมื่อเข้าสู่ระบบแล้ว) · null = ยังไม่มีรูป ให้แสดงอักษรย่อแทน */
       avatarUrl: string | null;
-      /**
-       * Format: date-time
-       * @description token หมดอายุเมื่อไร — ต้องเข้าผ่าน Core Hub ใหม่หลังจากนี้
-       */
-      sessionExpiresAt: string;
-    };
-    UpdateMyProfileDto: {
-      /** @description ส่ง "" เพื่อล้างค่า */
-      displayName?: string;
-      /**
-       * @description ตัวเลข 9–10 หลักขึ้นต้นด้วย 0 · ส่ง "" เพื่อล้างค่า
-       * @example 0812345678
-       */
-      phone?: string;
-      /** @description ห้อง/หน่วยงานที่ติดต่อได้ · ส่ง "" เพื่อล้างค่า */
-      workUnit?: string;
-    };
-    DeletedDto: {
-      /** Format: uuid */
-      id: string;
-      /** @enum {boolean} */
-      deleted: true;
+      session: components['schemas']['SessionDto'];
     };
     ProfileDto: {
       /**
        * Format: uuid
-       * @description id ของโปรไฟล์ในระบบนี้ (ใช้กับ PATCH /profiles/:id)
+       * @description id ของโปรไฟล์ในระบบนี้
        */
       id: string;
       /**
@@ -526,30 +740,34 @@ export interface components {
        * @example user-003
        */
       coreUserId: string;
-      /** @example staff@core.local */
-      email: string;
+      /**
+       * @description รหัสนักศึกษา/บุคลากรจาก Core Hub (GET /people/me) · null = บัญชียังไม่ผูกกับบุคคลในทะเบียน
+       * @example somsak.m
+       */
+      personCode: string | null;
       /** @enum {string} */
-      coreRole: 'student' | 'alumni' | 'staff' | 'admin';
+      coreRole: 'student' | 'alumni' | 'staff' | 'lecturer' | 'guest' | 'admin';
       /**
        * @description null = core role นี้เข้าระบบไม่ได้แล้ว
        * @enum {string|null}
        */
       subsystemRole: 'USER' | 'TECHNICIAN' | 'ADMIN' | null;
       isTechnician: boolean;
-      /** @example สมชาย ใจดี */
+      /**
+       * @description รายการไม่หาชื่อจาก Core Hub ทีละแถว จึงเป็น personCode (reference-data.md ข้อ 7.2)
+       * @example somsak.m
+       */
       displayName: string;
-      /** @example 0812345678 */
-      phone: string | null;
-      /** @example งานอาคารสถานที่ */
-      workUnit: string | null;
       /** @description รูปโปรไฟล์ (GET ได้เมื่อเข้าสู่ระบบแล้ว) · null = ยังไม่มีรูป ให้แสดงอักษรย่อแทน */
       avatarUrl: string | null;
       /** Format: date-time */
       lastSeenAt: string | null;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
+    };
+    DeletedDto: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {boolean} */
+      deleted: true;
     };
     PageMetaDto: {
       /** @example 42 */
@@ -561,92 +779,451 @@ export interface components {
       /** @example 3 */
       totalPages: number;
     };
-    UpdateProfileDto: {
-      /** @description แต่งตั้ง/ถอดถอนช่างซ่อมบำรุง (เฉพาะผู้ใช้ core role staff) */
+    PersonListItemDto: {
+      /** @example 6504101234 */
+      personCode: string;
+      /** @example นางสาวกริญญา ทาเกร */
+      fullName: string;
+      /** @enum {string} */
+      personType: 'STUDENT' | 'STAFF';
+      /** @description ประเภทบุคลากร เช่น LECTURER */
+      staffType: string | null;
+      /** @example ACTIVE */
+      status: string;
+      departmentName: string | null;
+      /** @description เคยเข้าระบบแจ้งซ่อมแล้ว */
+      hasProfile: boolean;
+      isTechnician: boolean;
+      /** @description แต่งตั้งเป็นช่างได้ (บุคลากรสายสนับสนุนที่มีบัญชีใน Core Hub) */
+      canBeTechnician: boolean;
+      /** @description ใบแจ้งซ่อมที่คนนี้แจ้งในระบบนี้ */
+      requestCount: number;
+      /** @description ที่ยังไม่ปิดงาน */
+      openRequestCount: number;
+      /** Format: date-time */
+      lastSeenAt: string | null;
+    };
+    SetTechnicianDto: {
+      /** @description แต่งตั้ง (true) / ถอดถอน (false) ช่างซ่อมบำรุง */
       isTechnician: boolean;
     };
     BuildingDto: {
+      /**
+       * @description code ของอาคารใน Core Hub — ใช้อ้างอิงในห้องและใบแจ้งซ่อม
+       * @example CS
+       */
+      code: string;
+      /** @example อาคารวิทยาการคอมพิวเตอร์ */
+      name: string;
+      nameEn: string | null;
+      /** @description false = Core Hub ปิดใช้งานแล้ว */
+      isActive: boolean;
+      /** @description ห้องที่ผู้ดูแลระบบแจ้งซ่อมเพิ่มไว้ */
+      roomCount: number;
+      /** @description เครื่องในห้องต่าง ๆ ของอาคาร */
+      equipmentCount: number;
+      /** @description ใบแจ้งซ่อมทั้งหมดของอาคาร */
+      requestCount: number;
+      /** @description ใบที่ยังไม่ปิดงาน */
+      openRequestCount: number;
+    };
+    BuildingRefDto: {
+      /** @example CS */
+      code: string;
+      /** @description ชื่ออาคารจาก Core Hub · หาไม่ได้ = code */
+      name: string;
+      /** @description false = Core Hub ปิดใช้งานแล้ว · null = หาไม่เจอในข้อมูลกลางตอนนี้ */
+      isActive: boolean | null;
+    };
+    /**
+     * @description ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ
+     * @enum {string}
+     */
+    RoomType: 'LAB' | 'LECTURE' | 'NETWORK_LAB' | 'MEETING' | 'OFFICE' | 'OTHER';
+    RoomStateSummaryDto: {
+      total: number;
+      ok: number;
+      reported: number;
+      inProgress: number;
+      onHold: number;
+    };
+    RoomDto: {
       /** Format: uuid */
       id: string;
-      /** @example อาคารเฉลิมพระเกียรติ */
+      /** @example CS */
+      buildingCode: string;
+      building: components['schemas']['BuildingRefDto'];
+      /** @example CS-201 */
+      code: string;
+      /** @example ห้องปฏิบัติการคอมพิวเตอร์ 1 */
       name: string;
+      floor: number | null;
+      description: string | null;
+      /** @description ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ */
+      roomType: components['schemas']['RoomType'];
+      /** @description จำนวนที่นั่ง */
+      capacity: number | null;
       /**
-       * @description รหัสย่อบนป้าย/เอกสาร
-       * @example CS1
+       * @description URL รูปห้อง (?v= เปลี่ยนเมื่อแก้ไข) · null = ยังไม่มีรูป
+       * @example /api/v1/rooms/0d6f…/photo?v=1759480000000
        */
-      code: string | null;
-      /** @description false = ไม่แสดงในฟอร์มแจ้งซ่อม แต่ข้อมูลเดิมยังอ้างถึงได้ */
+      photoUrl: string | null;
+      /** @description รหัสใน QR ของห้อง (/q/<qrCode>) */
+      qrCode: string;
       isActive: boolean;
-      /** @description จำนวนใบแจ้งซ่อมที่อ้างถึงอาคารนี้ */
-      requestCount: number;
-      /** @description จำนวนสติกเกอร์ QR ของอาคารนี้ */
-      qrTagCount: number;
+      /** @description สถานะเครื่องทั้งหมดในห้อง */
+      equipmentStates: components['schemas']['RoomStateSummaryDto'];
+      /** @description ใบแจ้งซ่อมของห้องนี้ที่ยังไม่ปิด (รวมที่ไม่ได้ผูกเครื่อง) */
+      openRequestCount: number;
+    };
+    /** @enum {string} */
+    CategoryIcon:
+      | 'computer'
+      | 'monitor'
+      | 'projector'
+      | 'aircon'
+      | 'fan'
+      | 'light'
+      | 'network'
+      | 'audio'
+      | 'furniture'
+      | 'other';
+    EquipmentCategoryDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      icon: components['schemas']['CategoryIcon'];
+      symptoms: string[];
+    };
+    /** @enum {string} */
+    EquipmentState: 'OK' | 'REPORTED' | 'IN_PROGRESS' | 'ON_HOLD';
+    /** @enum {string} */
+    RequestStatus:
+      'PENDING' | 'ACCEPTED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'REJECTED' | 'CANCELLED';
+    OpenRequestRefDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example RP-6910-0012 */
+      code: string;
+      status: components['schemas']['RequestStatus'];
+      equipment: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** @description ผู้แจ้ง + คนที่กด "ฉันก็เจอ" */
+      affectedCount: number;
+    };
+    EquipmentDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      roomId: string;
+      /** @example PC-01 */
+      label: string;
+      /** @example Dell OptiPlex 7090 */
+      name: string;
+      assetNumber: string | null;
+      /** @description รายละเอียดเครื่องหลายบรรทัด */
+      specs: string | null;
+      /** @example แถว 2 ที่ 3 */
+      position: string | null;
+      /**
+       * @description รหัสใน QR ของเครื่อง (/q/<qrCode>)
+       * @example K7QM4TZP
+       */
+      qrCode: string;
+      isActive: boolean;
+      /**
+       * @description URL รูปเครื่อง (?v= เปลี่ยนเมื่อแก้ไข) · null = ยังไม่มีรูป
+       * @example /api/v1/equipment/0d6f…/photo?v=1759480000000
+       */
+      photoUrl: string | null;
+      category: components['schemas']['EquipmentCategoryDto'];
+      state: components['schemas']['EquipmentState'];
+      /** @description ใบที่ยังไม่ปิดล่าสุดของเครื่องนี้ */
+      openRequest: components['schemas']['OpenRequestRefDto'] | null;
+    };
+    RoomDetailDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example CS */
+      buildingCode: string;
+      building: components['schemas']['BuildingRefDto'];
+      /** @example CS-201 */
+      code: string;
+      /** @example ห้องปฏิบัติการคอมพิวเตอร์ 1 */
+      name: string;
+      floor: number | null;
+      description: string | null;
+      /** @description ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ */
+      roomType: components['schemas']['RoomType'];
+      /** @description จำนวนที่นั่ง */
+      capacity: number | null;
+      /**
+       * @description URL รูปห้อง (?v= เปลี่ยนเมื่อแก้ไข) · null = ยังไม่มีรูป
+       * @example /api/v1/rooms/0d6f…/photo?v=1759480000000
+       */
+      photoUrl: string | null;
+      /** @description รหัสใน QR ของห้อง (/q/<qrCode>) */
+      qrCode: string;
+      isActive: boolean;
+      /** @description สถานะเครื่องทั้งหมดในห้อง */
+      equipmentStates: components['schemas']['RoomStateSummaryDto'];
+      /** @description ใบแจ้งซ่อมของห้องนี้ที่ยังไม่ปิด (รวมที่ไม่ได้ผูกเครื่อง) */
+      openRequestCount: number;
+      equipment: components['schemas']['EquipmentDto'][];
+      /** @description ใบที่ยังไม่ปิดของห้องที่ไม่ได้ผูกกับเครื่อง */
+      roomRequests: components['schemas']['OpenRequestRefDto'][];
+    };
+    CreateRoomDto: {
+      /**
+       * @description code ของอาคารใน Core Hub
+       * @example CS
+       */
+      buildingCode: string;
+      /**
+       * @description A–Z ตัวเลข และ - เท่านั้น
+       * @example CS-201
+       */
+      code: string;
+      /** @example ห้องปฏิบัติการคอมพิวเตอร์ 1 */
+      name: string;
+      floor?: number | null;
+      description?: string | null;
+      /** @description ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ */
+      roomType?: components['schemas']['RoomType'];
+      /** @description จำนวนที่นั่ง */
+      capacity?: number | null;
+    };
+    UpdateRoomDto: {
+      /** @example CS */
+      buildingCode?: string;
+      /** @example CS-201 */
+      code?: string;
+      name?: string;
+      floor?: number | null;
+      description?: string | null;
+      /** @description ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ */
+      roomType?: components['schemas']['RoomType'];
+      /** @description จำนวนที่นั่ง */
+      capacity?: number | null;
+      isActive?: boolean;
+    };
+    CreateEquipmentDto: {
+      /**
+       * Format: uuid
+       * @description ประเภทอุปกรณ์ (หมวดหมู่งานซ่อม)
+       */
+      categoryId: string;
+      /**
+       * @description ป้ายบนเครื่อง ไม่ซ้ำในห้องเดียวกัน
+       * @example PC-01
+       */
+      label: string;
+      /** @example Dell OptiPlex 7090 */
+      name: string;
+      assetNumber?: string;
+      /** @example Intel Core i5-11500 · RAM 16 GB · SSD 512 GB */
+      specs?: string;
+      /** @example แถว 2 ที่ 3 */
+      position?: string;
+      /** @description เพิ่มหลายเครื่องพร้อมกัน — ป้ายจะเป็น <label>-01, -02, … (เช่น PC → PC-01 ถึง PC-30) */
+      count?: number;
+    };
+    InventoryRoomRefDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example CS-201 */
+      code: string;
+      name: string;
+      floor: number | null;
+      /** @example CS */
+      buildingCode: string;
+      roomType: components['schemas']['RoomType'];
+    };
+    EquipmentInventoryDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      roomId: string;
+      /** @example PC-01 */
+      label: string;
+      /** @example Dell OptiPlex 7090 */
+      name: string;
+      assetNumber: string | null;
+      /** @description รายละเอียดเครื่องหลายบรรทัด */
+      specs: string | null;
+      /** @example แถว 2 ที่ 3 */
+      position: string | null;
+      /**
+       * @description รหัสใน QR ของเครื่อง (/q/<qrCode>)
+       * @example K7QM4TZP
+       */
+      qrCode: string;
+      isActive: boolean;
+      /**
+       * @description URL รูปเครื่อง (?v= เปลี่ยนเมื่อแก้ไข) · null = ยังไม่มีรูป
+       * @example /api/v1/equipment/0d6f…/photo?v=1759480000000
+       */
+      photoUrl: string | null;
+      category: components['schemas']['EquipmentCategoryDto'];
+      state: components['schemas']['EquipmentState'];
+      /** @description ใบที่ยังไม่ปิดล่าสุดของเครื่องนี้ */
+      openRequest: components['schemas']['OpenRequestRefDto'] | null;
+      room: components['schemas']['InventoryRoomRefDto'];
+    };
+    RoomRefDto: {
+      /** Format: uuid */
+      id: string;
+      code: string;
+      name: string;
+      floor: number | null;
+      building: components['schemas']['BuildingRefDto'];
+    };
+    EquipmentHistoryDto: {
+      /** Format: uuid */
+      id: string;
+      code: string;
+      status: components['schemas']['RequestStatus'];
+      description: string;
       /** Format: date-time */
       createdAt: string;
       /** Format: date-time */
-      updatedAt: string;
+      completedAt: string | null;
     };
-    CreateBuildingDto: {
-      /** @example อาคารเฉลิมพระเกียรติ */
+    EquipmentDetailDto: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      roomId: string;
+      /** @example PC-01 */
+      label: string;
+      /** @example Dell OptiPlex 7090 */
       name: string;
+      assetNumber: string | null;
+      /** @description รายละเอียดเครื่องหลายบรรทัด */
+      specs: string | null;
+      /** @example แถว 2 ที่ 3 */
+      position: string | null;
       /**
-       * @description A–Z ตัวเลข และ - เท่านั้น
-       * @example CS1
+       * @description รหัสใน QR ของเครื่อง (/q/<qrCode>)
+       * @example K7QM4TZP
        */
-      code?: string;
+      qrCode: string;
+      isActive: boolean;
+      /**
+       * @description URL รูปเครื่อง (?v= เปลี่ยนเมื่อแก้ไข) · null = ยังไม่มีรูป
+       * @example /api/v1/equipment/0d6f…/photo?v=1759480000000
+       */
+      photoUrl: string | null;
+      category: components['schemas']['EquipmentCategoryDto'];
+      state: components['schemas']['EquipmentState'];
+      /** @description ใบที่ยังไม่ปิดล่าสุดของเครื่องนี้ */
+      openRequest: components['schemas']['OpenRequestRefDto'] | null;
+      room: components['schemas']['RoomRefDto'];
+      /** @description ประวัติการแจ้งซ่อมล่าสุด 20 ใบ */
+      history: components['schemas']['EquipmentHistoryDto'][];
     };
-    UpdateBuildingDto: {
+    UpdateEquipmentDto: {
+      /** Format: uuid */
+      categoryId?: string;
+      label?: string;
       name?: string;
-      /** @description null = ล้างรหัส */
-      code?: string | null;
+      assetNumber?: string | null;
+      specs?: string | null;
+      position?: string | null;
       isActive?: boolean;
+      /**
+       * Format: uuid
+       * @description ย้ายไปห้องอื่น
+       */
+      roomId?: string;
+    };
+    QrTargetDto: {
+      /** @enum {string} */
+      kind: 'room' | 'equipment';
+      /** Format: uuid */
+      id: string;
     };
     CategoryDto: {
       /** Format: uuid */
       id: string;
-      /** @example ไฟฟ้าและแสงสว่าง */
+      /** @example คอมพิวเตอร์ */
       name: string;
+      /**
+       * @description ปุ่มอาการในหน้าแจ้งซ่อม
+       * @example [
+       *       "เปิดไม่ติด",
+       *       "จอไม่แสดงภาพ"
+       *     ]
+       */
+      symptoms: string[];
+      icon: components['schemas']['CategoryIcon'];
+      sortOrder: number;
       /** @description false = ไม่แสดงในฟอร์มแจ้งซ่อม แต่ข้อมูลเดิมยังอ้างถึงได้ */
       isActive: boolean;
-      /** @description จำนวนใบแจ้งซ่อมในหมวดนี้ */
+      /** @description จำนวนใบแจ้งซ่อมจริงในหมวดนี้ */
       requestCount: number;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
+      /** @description ใบที่ยังไม่ปิดงาน */
+      openRequestCount: number;
+      /** @description จำนวนเครื่องในห้องต่าง ๆ ที่เป็นประเภทนี้ */
+      equipmentCount: number;
     };
     CreateCategoryDto: {
-      /** @example ไฟฟ้าและแสงสว่าง */
+      /** @example คอมพิวเตอร์ */
       name: string;
+      symptoms?: string[];
+      icon?: components['schemas']['CategoryIcon'];
+      sortOrder?: number;
     };
     UpdateCategoryDto: {
+      /** @example คอมพิวเตอร์ */
       name?: string;
+      symptoms?: string[];
+      icon?: components['schemas']['CategoryIcon'];
+      sortOrder?: number;
       isActive?: boolean;
     };
     /** @enum {string} */
     Priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
     CreateRepairRequestDto: {
-      /** Format: uuid */
-      buildingId: string;
-      /** Format: uuid */
-      categoryId: string;
+      /**
+       * Format: uuid
+       * @description เครื่องที่ชำรุด (จากหน้าห้องหรือสแกน QR ของเครื่อง)
+       */
+      equipmentId?: string;
+      /**
+       * Format: uuid
+       * @description ห้องที่แจ้ง (ไม่เจาะจงเครื่อง เช่น ไฟห้อง ประตู)
+       */
+      roomId?: string;
+      /**
+       * @description code ของอาคารใน Core Hub — บังคับเมื่อไม่ได้เลือกห้อง/เครื่อง
+       * @example CS
+       */
+      buildingCode?: string;
+      /**
+       * Format: uuid
+       * @description บังคับเมื่อไม่ได้เลือกเครื่อง
+       */
+      categoryId?: string;
       /** @description 0 = ชั้น G · ติดลบ = ชั้นใต้ดิน */
       floor?: number;
-      /** @example ห้องปฏิบัติการคอมพิวเตอร์ 1 (CS-201) */
-      location: string;
-      /** @example เครื่องปรับอากาศ */
-      equipment: string;
+      /**
+       * @description บังคับเมื่อไม่ได้เลือกห้อง/เครื่อง
+       * @example ห้องน้ำชายชั้น 2
+       */
+      location?: string;
+      /**
+       * @description บังคับเมื่อไม่ได้เลือกเครื่อง
+       * @example หลอดไฟ
+       */
+      equipment?: string;
       /** @example 7440-001-0001/65 */
       assetNumber?: string;
       /** @example เปิดแล้วมีแต่ลม ไม่เย็น มีน้ำหยดที่ตัวเครื่อง */
       description: string;
       /** @default MEDIUM */
       priority: components['schemas']['Priority'];
-      /**
-       * Format: uuid
-       * @description แจ้งจากการสแกนสติกเกอร์ QR
-       */
-      qrTagId?: string;
     };
     /** @enum {string} */
     StatusTarget: 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'REJECTED';
@@ -655,28 +1232,40 @@ export interface components {
       /** @description บังคับเมื่อพักงาน (ON_HOLD) หรือปฏิเสธ (REJECTED) */
       note?: string;
     };
-    BuildingRefDto: {
-      /** Format: uuid */
-      id: string;
-      name: string;
-      code: string | null;
-    };
     CategoryRefDto: {
       /** Format: uuid */
       id: string;
       name: string;
     };
-    /** @enum {string} */
-    RequestStatus:
-      'PENDING' | 'ACCEPTED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'REJECTED' | 'CANCELLED';
+    RequestRoomRefDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example CS-201 */
+      code: string;
+      name: string;
+    };
+    RequestEquipmentRefDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example PC-01 */
+      label: string;
+      name: string;
+    };
     PersonDto: {
       /** @example user-005 */
       coreUserId: string;
-      /** @example สมชาย ใจดี */
+      /**
+       * @description รหัสนักศึกษา/บุคลากรจาก Core Hub (GET /people/me) · null = บัญชียังไม่ผูกกับบุคคลในทะเบียน
+       * @example somchai.j
+       */
+      personCode: string | null;
+      /**
+       * @description ชื่อจาก Core Hub เฉพาะหน้ารายละเอียดเมื่อผู้ดูมีสิทธิ์ (staff · lecturer · admin หรือตัวเอง) · ไม่งั้นเป็น personCode
+       * @example นายสมชาย ใจดี
+       */
       displayName: string;
-      email: string;
-      phone: string | null;
-      workUnit: string | null;
+      /** @description true = displayName เป็นชื่อจาก Core Hub */
+      nameFromCoreHub: boolean;
       /** @description รูปโปรไฟล์ (GET ได้เมื่อเข้าสู่ระบบแล้ว) · null = ยังไม่มีรูป ให้แสดงอักษรย่อแทน */
       avatarUrl: string | null;
     };
@@ -691,16 +1280,26 @@ export interface components {
       /** @description นาทีที่เหลือ (ติดลบ = เกินมาแล้ว) · null เมื่อปิดงาน */
       minutesLeft: number | null;
     };
+    /**
+     * @description สิ่งที่ผู้เรียกทำกับใบนี้ได้ตอนนี้ (ใช้แสดงปุ่ม และบอร์ดงานใช้เลือกคอลัมน์ที่ลากไปได้)
+     * @enum {string}
+     */
+    RequestAction:
+      'comment' | 'cancel' | 'accept' | 'assign' | 'edit' | 'start' | 'hold' | 'complete' | 'reject' | 'rate';
     RepairRequestSummaryDto: {
       /** Format: uuid */
       id: string;
       /** @example RP-6909-0012 */
       code: string;
       equipment: string;
+      /** @description อาการที่แจ้ง ย่อไม่เกิน 140 ตัวอักษร (ฉบับเต็มอยู่ในรายละเอียด) */
+      descriptionExcerpt: string;
       location: string;
       floor: number | null;
       building: components['schemas']['BuildingRefDto'];
       category: components['schemas']['CategoryRefDto'];
+      room: components['schemas']['RequestRoomRefDto'] | null;
+      item: components['schemas']['RequestEquipmentRefDto'] | null;
       priority: components['schemas']['Priority'];
       status: components['schemas']['RequestStatus'];
       reporter: components['schemas']['PersonDto'];
@@ -718,12 +1317,39 @@ export interface components {
       acceptedAt: string | null;
       /** Format: date-time */
       completedAt: string | null;
+      /** @description จำนวนคนที่กด "ฉันก็เจอ" (ไม่นับผู้แจ้ง) */
+      followerCount: number;
+      /** @description ผู้เรียกกด "ฉันก็เจอ" ใบนี้ไว้ */
+      followedByMe: boolean;
+      /** @description สิ่งที่ผู้เรียกทำกับใบนี้ได้ตอนนี้ (ใช้แสดงปุ่ม และบอร์ดงานใช้เลือกคอลัมน์ที่ลากไปได้) */
+      allowedActions: components['schemas']['RequestAction'][];
     };
-    QrTagRefDto: {
+    SimilarRepairRequestDto: {
       /** Format: uuid */
       id: string;
-      /** @example K7QM4TZP */
+      /** @example RP-6909-0012 */
       code: string;
+      equipment: string;
+      location: string;
+      floor: number | null;
+      assetNumber: string | null;
+      category: components['schemas']['CategoryRefDto'];
+      status: components['schemas']['RequestStatus'];
+      /** Format: date-time */
+      createdAt: string;
+      followerCount: number;
+      /** @description ผู้เรียกกด "ฉันก็เจอ" ใบนี้ไว้แล้ว */
+      followedByMe: boolean;
+      /** @description ผู้เรียกเป็นคนแจ้งใบนี้เอง */
+      mine: boolean;
+      /** @description ตรงกันด้วยเลขครุภัณฑ์ (ไม่ใช่แค่ห้องเดียวกัน) */
+      sameAsset: boolean;
+    };
+    FollowStateDto: {
+      /** Format: uuid */
+      id: string;
+      followerCount: number;
+      followedByMe: boolean;
     };
     /** @enum {string} */
     ImageKind: 'BEFORE' | 'AFTER';
@@ -741,7 +1367,7 @@ export interface components {
       createdAt: string;
     };
     /** @enum {string} */
-    ActivityType: 'CREATED' | 'STATUS_CHANGED' | 'ASSIGNED' | 'UPDATED' | 'COMMENT' | 'RATED';
+    ActivityType: 'CREATED' | 'STATUS_CHANGED' | 'ASSIGNED' | 'UPDATED' | 'COMMENT' | 'RATED' | 'FOLLOWED';
     RequestActivityDto: {
       /** Format: uuid */
       id: string;
@@ -753,22 +1379,20 @@ export interface components {
       /** Format: date-time */
       createdAt: string;
     };
-    /**
-     * @description สิ่งที่ผู้เรียกทำกับใบนี้ได้ตอนนี้ (ใช้แสดงปุ่ม)
-     * @enum {string}
-     */
-    RequestAction:
-      'comment' | 'cancel' | 'accept' | 'assign' | 'edit' | 'start' | 'hold' | 'complete' | 'reject' | 'rate';
     RepairRequestDetailDto: {
       /** Format: uuid */
       id: string;
       /** @example RP-6909-0012 */
       code: string;
       equipment: string;
+      /** @description อาการที่แจ้ง ย่อไม่เกิน 140 ตัวอักษร (ฉบับเต็มอยู่ในรายละเอียด) */
+      descriptionExcerpt: string;
       location: string;
       floor: number | null;
       building: components['schemas']['BuildingRefDto'];
       category: components['schemas']['CategoryRefDto'];
+      room: components['schemas']['RequestRoomRefDto'] | null;
+      item: components['schemas']['RequestEquipmentRefDto'] | null;
       priority: components['schemas']['Priority'];
       status: components['schemas']['RequestStatus'];
       reporter: components['schemas']['PersonDto'];
@@ -786,14 +1410,19 @@ export interface components {
       acceptedAt: string | null;
       /** Format: date-time */
       completedAt: string | null;
+      /** @description จำนวนคนที่กด "ฉันก็เจอ" (ไม่นับผู้แจ้ง) */
+      followerCount: number;
+      /** @description ผู้เรียกกด "ฉันก็เจอ" ใบนี้ไว้ */
+      followedByMe: boolean;
+      /** @description สิ่งที่ผู้เรียกทำกับใบนี้ได้ตอนนี้ (ใช้แสดงปุ่ม และบอร์ดงานใช้เลือกคอลัมน์ที่ลากไปได้) */
+      allowedActions: components['schemas']['RequestAction'][];
       description: string;
       assetNumber: string | null;
       feedback: string | null;
-      qrTag: components['schemas']['QrTagRefDto'] | null;
       images: components['schemas']['RepairImageDto'][];
       activities: components['schemas']['RequestActivityDto'][];
-      /** @description สิ่งที่ผู้เรียกทำกับใบนี้ได้ตอนนี้ (ใช้แสดงปุ่ม) */
-      allowedActions: components['schemas']['RequestAction'][];
+      /** @description ผู้เรียกกด "ฉันก็เจอ" ได้ตอนนี้ (ไม่ใช่ผู้แจ้ง · ใบยังเปิดอยู่ · ยังไม่ได้กด) */
+      canFollow: boolean;
     };
     UpdateRepairRequestDto: {
       /** @description เปลี่ยนแล้วคำนวณกำหนดเสร็จใหม่ */
@@ -849,63 +1478,6 @@ export interface components {
     };
     UpdateNotificationDto: {
       isRead: boolean;
-    };
-    OpenRequestHintDto: {
-      /** @example RP-6909-0012 */
-      code: string;
-      equipment: string;
-      status: components['schemas']['RequestStatus'];
-      /** Format: date-time */
-      createdAt: string;
-    };
-    QrTagDto: {
-      /** Format: uuid */
-      id: string;
-      /**
-       * @description รหัส 8 ตัวบนสติกเกอร์ (ไม่มี I O 0 1)
-       * @example K7QM4TZP
-       */
-      code: string;
-      building: components['schemas']['BuildingRefDto'];
-      floor: number | null;
-      /** @example ห้องปฏิบัติการคอมพิวเตอร์ 1 (CS-201) */
-      location: string;
-      /** @example เครื่องปรับอากาศ ตัวที่ 2 */
-      equipment: string | null;
-      assetNumber: string | null;
-      category: components['schemas']['CategoryRefDto'] | null;
-      /** @description จำนวนใบแจ้งซ่อมทั้งหมดที่แจ้งผ่าน QR นี้ */
-      requestCount: number;
-      /** @description งานที่ยังไม่ปิดของจุดนี้ (ไม่มีข้อมูลผู้แจ้ง) — ใช้เตือนก่อนแจ้งซ้ำ */
-      openRequests: components['schemas']['OpenRequestHintDto'][];
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
-    };
-    CreateQrTagDto: {
-      /** Format: uuid */
-      buildingId: string;
-      floor?: number;
-      location: string;
-      /** @description เว้นว่าง = สติกเกอร์ของห้อง/จุด ไม่เจาะจงอุปกรณ์ */
-      equipment?: string;
-      assetNumber?: string;
-      /**
-       * Format: uuid
-       * @description หมวดหมู่ที่เลือกไว้ให้ในฟอร์ม
-       */
-      categoryId?: string;
-    };
-    UpdateQrTagDto: {
-      /** Format: uuid */
-      buildingId?: string;
-      floor?: number | null;
-      location?: string;
-      equipment?: string | null;
-      assetNumber?: string | null;
-      /** Format: uuid */
-      categoryId?: string | null;
     };
     StatisticsRangeDto: {
       /** @example 2026-08-26 */
@@ -966,7 +1538,20 @@ export interface components {
       name: string;
       count: number;
     };
+    BuildingCountDto: {
+      /**
+       * @description code ของอาคารใน Core Hub
+       * @example CS
+       */
+      code: string;
+      /** @description ชื่อจาก Core Hub · หาไม่ได้ = code */
+      name: string;
+      count: number;
+    };
     HotSpotDto: {
+      /** @example CS */
+      buildingCode: string;
+      /** @description ชื่อจาก Core Hub · หาไม่ได้ = code */
       buildingName: string;
       location: string;
       /** @description จำนวนครั้งที่แจ้งในช่วงนี้ */
@@ -995,6 +1580,59 @@ export interface components {
       onTime: number;
       avgRating: number | null;
     };
+    StatRoomRefDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example CS-201 */
+      code: string;
+      name: string;
+      /** @example CS */
+      buildingCode: string;
+    };
+    RoomStatDto: {
+      room: components['schemas']['StatRoomRefDto'];
+      /** @description จำนวนที่แจ้งในช่วงนี้ */
+      total: number;
+      /** @description ในจำนวนนั้น ที่ยังไม่ปิด */
+      open: number;
+      /** @description ในจำนวนนั้น ที่ซ่อมเสร็จแล้ว */
+      completed: number;
+      /** @description เครื่องที่เปิดใช้งานในห้อง (ตอนนี้) */
+      equipmentCount: number;
+      /** @description เครื่องที่มีใบแจ้งซ่อมยังไม่ปิด (ตอนนี้) */
+      brokenNow: number;
+    };
+    StatEquipmentRefDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example PC-01 */
+      label: string;
+      name: string;
+    };
+    StatEquipmentRoomRefDto: {
+      /** Format: uuid */
+      id: string;
+      /** @example CS-201 */
+      code: string;
+    };
+    StatCategoryRefDto: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      icon: components['schemas']['CategoryIcon'];
+    };
+    TopEquipmentDto: {
+      equipment: components['schemas']['StatEquipmentRefDto'];
+      room: components['schemas']['StatEquipmentRoomRefDto'];
+      category: components['schemas']['StatCategoryRefDto'];
+      /** @description จำนวนที่แจ้งในช่วงนี้ */
+      total: number;
+      /**
+       * Format: date-time
+       * @description แจ้งครั้งล่าสุดในช่วงนี้
+       */
+      lastReportedAt: string;
+    };
     StatisticsDto: {
       range: components['schemas']['StatisticsRangeDto'];
       /** @description สถานะ ณ ตอนนี้ (ไม่ขึ้นกับช่วงวันที่) */
@@ -1009,11 +1647,15 @@ export interface components {
       byStatus: components['schemas']['StatusCountDto'][];
       byPriority: components['schemas']['PriorityCountDto'][];
       byCategory: components['schemas']['NamedCountDto'][];
-      byBuilding: components['schemas']['NamedCountDto'][];
+      byBuilding: components['schemas']['BuildingCountDto'][];
       /** @description จุดที่แจ้งซ้ำบ่อย (≥ 2 ครั้ง) 5 อันดับแรก */
       hotSpots: components['schemas']['HotSpotDto'][];
       trend: components['schemas']['TrendPointDto'][];
       technicians: components['schemas']['TechnicianLoadDto'][];
+      /** @description ใบที่แจ้งในช่วงนี้แยกตามห้อง (เฉพาะใบที่ผูกห้อง) เรียงจากมากไปน้อย */
+      byRoom: components['schemas']['RoomStatDto'][];
+      /** @description เครื่องที่ถูกแจ้งบ่อยที่สุดในช่วงนี้ 10 อันดับ */
+      topEquipment: components['schemas']['TopEquipmentDto'][];
     };
   };
   responses: never;
@@ -1024,29 +1666,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  Health_health: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** @enum {boolean} */
-            success: true;
-            data: components['schemas']['HealthDto'];
-          };
-        };
-      };
-    };
-  };
   Me_me: {
     parameters: {
       query?: never;
@@ -1060,46 +1679,86 @@ export interface operations {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          'application/json': {
-            /** @enum {boolean} */
-            success: true;
-            data: components['schemas']['MeDto'];
-          };
-        };
-      };
-      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
+        content?: never;
       };
     };
   };
-  Me_update: {
+  Sso_login: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UpdateMyProfileDto'];
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
+  };
+  Sso_callback: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  Sso_logout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  Health_check: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  Profiles_me: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
     responses: {
       200: {
         headers: {
@@ -1109,17 +1768,8 @@ export interface operations {
           'application/json': {
             /** @enum {boolean} */
             success: true;
-            data: components['schemas']['MeDto'];
+            data: components['schemas']['MyProfileDto'];
           };
-        };
-      };
-      /** @description BAD_REQUEST / VALIDATION_ERROR */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
         };
       };
       /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
@@ -1131,18 +1781,9 @@ export interface operations {
           'application/json': components['schemas']['ErrorEnvelopeDto'];
         };
       };
-      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
     };
   };
-  Me_uploadAvatar: {
+  Profiles_uploadAvatar: {
     parameters: {
       query?: never;
       header?: never;
@@ -1166,7 +1807,7 @@ export interface operations {
           'application/json': {
             /** @enum {boolean} */
             success: true;
-            data: components['schemas']['MeDto'];
+            data: components['schemas']['ProfileDto'];
           };
         };
       };
@@ -1208,7 +1849,7 @@ export interface operations {
       };
     };
   };
-  Me_removeAvatar: {
+  Profiles_removeAvatar: {
     parameters: {
       query?: never;
       header?: never;
@@ -1272,8 +1913,6 @@ export interface operations {
       query?: {
         page?: number;
         limit?: number;
-        /** @description ค้นจากชื่อ อีเมล หรือหน่วยงาน */
-        q?: string;
         role?: 'USER' | 'TECHNICIAN' | 'ADMIN';
       };
       header?: never;
@@ -1315,6 +1954,143 @@ export interface operations {
       };
       /** @description FORBIDDEN — สิทธิ์ไม่พอ */
       403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Profiles_people: {
+    parameters: {
+      query?: {
+        page?: number;
+        limit?: number;
+        /** @description ค้นในรหัสและชื่อ (Core Hub) */
+        q?: string;
+        personType?: 'STUDENT' | 'STAFF';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['PersonListItemDto'][];
+            meta: components['schemas']['PageMetaDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After) */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Profiles_setTechnician: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        personCode: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetTechnicianDto'];
+      };
+    };
+    responses: {
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description CONFLICT — ชนกฎธุรกิจ */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After) */
+      503: {
         headers: {
           [name: string]: unknown;
         };
@@ -1377,80 +2153,6 @@ export interface operations {
           'image/jpeg': components['schemas']['ErrorEnvelopeDto'];
           'image/png': components['schemas']['ErrorEnvelopeDto'];
           'image/webp': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-    };
-  };
-  Profiles_update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UpdateProfileDto'];
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** @enum {boolean} */
-            success: true;
-            data: components['schemas']['ProfileDto'];
-          };
-        };
-      };
-      /** @description BAD_REQUEST / VALIDATION_ERROR */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description NOT_FOUND */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description CONFLICT — ชนกฎธุรกิจ */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
         };
       };
     };
@@ -1528,9 +2230,9 @@ export interface operations {
       query?: {
         page?: number;
         limit?: number;
-        /** @description ค้นจากชื่อหรือรหัส */
+        /** @description ค้นจากชื่อหรือ code */
         q?: string;
-        /** @description true = เฉพาะที่เปิดใช้งาน (ใช้ในฟอร์มแจ้งซ่อม) */
+        /** @description ใส่ได้เพื่อความเข้ากันได้ — รายการแสดงเฉพาะอาคารที่ Core Hub เปิดใช้งานเสมอ */
         isActive?: boolean;
       };
       header?: never;
@@ -1579,62 +2281,8 @@ export interface operations {
           'application/json': components['schemas']['ErrorEnvelopeDto'];
         };
       };
-    };
-  };
-  Buildings_create: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['CreateBuildingDto'];
-      };
-    };
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** @enum {boolean} */
-            success: true;
-            data: components['schemas']['BuildingDto'];
-          };
-        };
-      };
-      /** @description BAD_REQUEST / VALIDATION_ERROR */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description CONFLICT — ชนกฎธุรกิจ */
-      409: {
+      /** @description SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After) */
+      503: {
         headers: {
           [name: string]: unknown;
         };
@@ -1649,7 +2297,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        id: string;
+        code: string;
       };
       cookie?: never;
     };
@@ -1703,9 +2351,200 @@ export interface operations {
           'application/json': components['schemas']['ErrorEnvelopeDto'];
         };
       };
+      /** @description SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After) */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
     };
   };
-  Buildings_remove: {
+  Rooms_list: {
+    parameters: {
+      query?: {
+        buildingCode?: string;
+        /** @description ค้นจากรหัสหรือชื่อห้อง */
+        q?: string;
+        /** @description ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ */
+        roomType?: components['schemas']['RoomType'];
+        /** @description true = เฉพาะห้องที่เปิดใช้งาน */
+        isActive?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['RoomDto'][];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateRoomDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['RoomDetailDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After) */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['RoomDetailDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_remove: {
     parameters: {
       query?: never;
       header?: never;
@@ -1775,7 +2614,7 @@ export interface operations {
       };
     };
   };
-  Buildings_update: {
+  Rooms_update: {
     parameters: {
       query?: never;
       header?: never;
@@ -1786,7 +2625,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        'application/json': components['schemas']['UpdateBuildingDto'];
+        'application/json': components['schemas']['UpdateRoomDto'];
       };
     };
     responses: {
@@ -1798,7 +2637,152 @@ export interface operations {
           'application/json': {
             /** @enum {boolean} */
             success: true;
-            data: components['schemas']['BuildingDto'];
+            data: components['schemas']['RoomDetailDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After) */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_roomPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description ไฟล์รูป */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': string;
+          'image/png': string;
+          'image/webp': string;
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': components['schemas']['ErrorEnvelopeDto'];
+          'image/png': components['schemas']['ErrorEnvelopeDto'];
+          'image/webp': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': components['schemas']['ErrorEnvelopeDto'];
+          'image/png': components['schemas']['ErrorEnvelopeDto'];
+          'image/webp': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': components['schemas']['ErrorEnvelopeDto'];
+          'image/png': components['schemas']['ErrorEnvelopeDto'];
+          'image/webp': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': components['schemas']['ErrorEnvelopeDto'];
+          'image/png': components['schemas']['ErrorEnvelopeDto'];
+          'image/webp': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_uploadRoomPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': {
+          /** Format: binary */
+          photo: string;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['RoomDetailDto'];
           };
         };
       };
@@ -1840,6 +2824,672 @@ export interface operations {
       };
       /** @description CONFLICT — ชนกฎธุรกิจ */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_removeRoomPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['DeletedDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description CONFLICT — ชนกฎธุรกิจ */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_addEquipment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateEquipmentDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['RoomDetailDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_inventory: {
+    parameters: {
+      query?: {
+        buildingCode?: string;
+        roomId?: string;
+        /** @description ประเภทอุปกรณ์ (หมวดหมู่งานซ่อม) */
+        categoryId?: string;
+        /** @description ค้นจากป้าย ชื่อ/รุ่น หรือเลขครุภัณฑ์ */
+        q?: string;
+        /** @description true = เฉพาะเครื่องที่เปิดใช้งาน */
+        isActive?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['EquipmentInventoryDto'][];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_getEquipment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['EquipmentDetailDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_removeEquipment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['DeletedDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description CONFLICT — ชนกฎธุรกิจ */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_updateEquipment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateEquipmentDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['EquipmentDetailDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_equipmentPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description ไฟล์รูป */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': string;
+          'image/png': string;
+          'image/webp': string;
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': components['schemas']['ErrorEnvelopeDto'];
+          'image/png': components['schemas']['ErrorEnvelopeDto'];
+          'image/webp': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': components['schemas']['ErrorEnvelopeDto'];
+          'image/png': components['schemas']['ErrorEnvelopeDto'];
+          'image/webp': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': components['schemas']['ErrorEnvelopeDto'];
+          'image/png': components['schemas']['ErrorEnvelopeDto'];
+          'image/webp': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'image/jpeg': components['schemas']['ErrorEnvelopeDto'];
+          'image/png': components['schemas']['ErrorEnvelopeDto'];
+          'image/webp': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_uploadEquipmentPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': {
+          /** Format: binary */
+          photo: string;
+        };
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['EquipmentDetailDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description CONFLICT — ชนกฎธุรกิจ */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_removeEquipmentPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['DeletedDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description CONFLICT — ชนกฎธุรกิจ */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  Rooms_resolveQr: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['QrTargetDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -2179,13 +3829,14 @@ export interface operations {
       query?: {
         page?: number;
         limit?: number;
-        /** @description mine = ที่ฉันแจ้ง · assigned = งานที่ฉันรับผิดชอบ · all = ทั้งหมด (ช่าง/ผู้ดูแล) */
+        /** @description mine = ที่ฉันแจ้ง + ที่ฉันกด "ฉันก็เจอ" · assigned = งานที่ฉันรับผิดชอบ · all = ทั้งหมด (ช่าง/ผู้ดูแล) */
         scope?: 'mine' | 'assigned' | 'all';
         status?: components['schemas']['RequestStatus'];
         /** @description open = ยังไม่ปิดงาน · overdue = เกินกำหนด SLA */
         state?: 'open' | 'closed' | 'overdue';
         priority?: components['schemas']['Priority'];
-        buildingId?: string;
+        /** @description code ของอาคารใน Core Hub */
+        buildingCode?: string;
         categoryId?: string;
         /** @description กรองตามช่างผู้รับผิดชอบ (ใช้กับ scope=all) */
         assigneeCoreUserId?: string;
@@ -2298,6 +3949,194 @@ export interface operations {
       };
       /** @description FORBIDDEN — สิทธิ์ไม่พอ */
       403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  RepairRequests_similar: {
+    parameters: {
+      query: {
+        /** @description code ของอาคารใน Core Hub */
+        buildingCode: string;
+        /** @description ห้อง/จุด — เทียบแบบมีคำนี้อยู่ (ไม่สนตัวพิมพ์) */
+        location?: string;
+        /** @description เลขครุภัณฑ์ — ตรงกัน = อุปกรณ์ชิ้นเดียวกัน */
+        assetNumber?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['SimilarRepairRequestDto'][];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  RepairRequests_follow: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['FollowStateDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description CONFLICT — ชนกฎธุรกิจ */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+    };
+  };
+  RepairRequests_unfollow: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            /** @enum {boolean} */
+            success: true;
+            data: components['schemas']['FollowStateDto'];
+          };
+        };
+      };
+      /** @description BAD_REQUEST / VALIDATION_ERROR */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ErrorEnvelopeDto'];
+        };
+      };
+      /** @description NOT_FOUND */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -3064,306 +4903,6 @@ export interface operations {
       };
     };
   };
-  QrTags_list: {
-    parameters: {
-      query?: {
-        page?: number;
-        limit?: number;
-        /** @description ค้นหาด้วยรหัสบนสติกเกอร์ (ใช้ตอนสแกน) */
-        code?: string;
-        buildingId?: string;
-        /** @description ค้นจากสถานที่ อุปกรณ์ หรือเลขครุภัณฑ์ */
-        q?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** @enum {boolean} */
-            success: true;
-            data: components['schemas']['QrTagDto'][];
-            meta: components['schemas']['PageMetaDto'];
-          };
-        };
-      };
-      /** @description BAD_REQUEST / VALIDATION_ERROR */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-    };
-  };
-  QrTags_create: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['CreateQrTagDto'];
-      };
-    };
-    responses: {
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** @enum {boolean} */
-            success: true;
-            data: components['schemas']['QrTagDto'];
-          };
-        };
-      };
-      /** @description BAD_REQUEST / VALIDATION_ERROR */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-    };
-  };
-  QrTags_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** @enum {boolean} */
-            success: true;
-            data: components['schemas']['QrTagDto'];
-          };
-        };
-      };
-      /** @description BAD_REQUEST / VALIDATION_ERROR */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description NOT_FOUND */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-    };
-  };
-  QrTags_remove: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** @enum {boolean} */
-            success: true;
-            data: components['schemas']['DeletedDto'];
-          };
-        };
-      };
-      /** @description BAD_REQUEST / VALIDATION_ERROR */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description NOT_FOUND */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-    };
-  };
-  QrTags_update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UpdateQrTagDto'];
-      };
-    };
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** @enum {boolean} */
-            success: true;
-            data: components['schemas']['QrTagDto'];
-          };
-        };
-      };
-      /** @description BAD_REQUEST / VALIDATION_ERROR */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้ */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description FORBIDDEN — สิทธิ์ไม่พอ */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-      /** @description NOT_FOUND */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ErrorEnvelopeDto'];
-        };
-      };
-    };
-  };
   Statistics_summary: {
     parameters: {
       query?: {
@@ -3371,6 +4910,8 @@ export interface operations {
         from?: string;
         /** @description ถึงวันที่ (รวมวันนั้น) · ค่าเริ่มต้นวันนี้ */
         to?: string;
+        /** @description เฉพาะใบแจ้งซ่อมของห้องนี้ (ทุกสถิติ) */
+        roomId?: string;
       };
       header?: never;
       path?: never;

@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers';
+import { SESSION_COOKIE } from './config';
 import type { ErrorCode, PageMeta } from './types';
 
-const SESSION_COOKIE = 'core_hub_access_token';
-const backend = () => (process.env.BACKEND_URL ?? 'http://localhost:3002').replace(/\/+$/, '');
+const backend = () => (process.env.BACKEND_URL ?? 'http://127.0.0.1:4221').replace(/\/+$/, '');
 
 export type ServerResult<T> =
   | { ok: true; data: T; meta?: PageMeta }

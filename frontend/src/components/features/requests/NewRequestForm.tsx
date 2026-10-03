@@ -8,13 +8,16 @@ import { LoadingButton } from '@/components/shared/LoadingButton';
 import { useToast } from '@/components/shared/Toast';
 import { api, ApiRequestError } from '@/lib/api';
 import { floorLabel } from '@/lib/format';
+import { useUnsavedForm } from '@/lib/sso';
 import { PRIORITIES, PRIORITY_HINT, PRIORITY_LABEL } from '@/lib/labels';
 import type { Priority, RepairRequestDetail } from '@/lib/types';
 import { PhotoPicker, type PickedPhoto } from './PhotoPicker';
+import { SimilarRequests } from './SimilarRequests';
+import { TriageHint } from './TriageHint';
 
 type Option = { value: string; label: string };
 export type RequestDraft = {
-  buildingId: string;
+  buildingCode: string;
   floor: string;
   location: string;
   categoryId: string;
@@ -26,7 +29,7 @@ export type RequestDraft = {
 
 type Field = keyof RequestDraft | 'photos';
 const ORDER: Field[] = [
-  'buildingId',
+  'buildingCode',
   'floor',
   'location',
   'categoryId',
@@ -38,10 +41,14 @@ const ORDER: Field[] = [
 ];
 const FLOORS = [-2, -1, 0, ...Array.from({ length: 15 }, (_, i) => i + 1)];
 
-function validate(draft: RequestDraft): Partial<Record<Field, string>> {
+/** ห้องที่เลือกไว้แล้ว (มาจาก ?room=) — อาคาร/ชั้น/ห้องระบบกรอกให้เอง */
+export type FixedRoom = { id: string; code: string; buildingCode: string };
+
+function validate(draft: RequestDraft, room?: FixedRoom): Partial<Record<Field, string>> {
   const errors: Partial<Record<Field, string>> = {};
-  if (!draft.buildingId) errors.buildingId = 'กรุณาเลือกอาคาร';
-  if (draft.location.trim().length < 2) errors.location = 'กรุณาระบุห้องหรือจุดที่ชำรุด อย่างน้อย 2 ตัวอักษร';
+  if (!room && !draft.buildingCode) errors.buildingCode = 'กรุณาเลือกอาคาร';
+  if (!room && draft.location.trim().length < 2)
+    errors.location = 'กรุณาระบุห้องหรือจุดที่ชำรุด อย่างน้อย 2 ตัวอักษร';
   if (!draft.categoryId) errors.categoryId = 'กรุณาเลือกหมวดหมู่งานซ่อม';
   if (draft.equipment.trim().length < 2) errors.equipment = 'กรุณาระบุสิ่งที่ชำรุด อย่างน้อย 2 ตัวอักษร';
   if (draft.description.trim().length < 5) errors.description = 'กรุณาอธิบายอาการอย่างน้อย 5 ตัวอักษร';
@@ -57,12 +64,13 @@ export function NewRequestForm({
   buildings,
   categories,
   initial,
-  qrTagId,
+  room,
 }: {
   buildings: Option[];
   categories: Option[];
   initial: RequestDraft;
-  qrTagId?: string;
+  /** แจ้งปัญหาของห้อง (ไม่เจาะจงเครื่อง) — ซ่อนช่องอาคาร/ชั้น/ห้อง แล้วส่ง roomId แทน */
+  room?: FixedRoom;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -75,6 +83,8 @@ export function NewRequestForm({
   const [announce, setAnnounce] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const dirty = useRef(false);
+  // session หมดระหว่างกรอก: AppShell ไม่ redirect ทับ แต่ขึ้นแถบให้ต่ออายุในแท็บใหม่ (auth-contract.md ข้อ 7)
+  useUnsavedForm(!submitting && (draft !== initial || photos.length > 0));
 
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
@@ -88,14 +98,14 @@ export function NewRequestForm({
     dirty.current = true;
     setDraft((current) => {
       const next = { ...current, [key]: value };
-      if (touched[key]) setErrors((existing) => ({ ...existing, [key]: validate(next)[key] }));
+      if (touched[key]) setErrors((existing) => ({ ...existing, [key]: validate(next, room)[key] }));
       return next;
     });
   };
 
   const blur = (key: keyof RequestDraft) => {
     setTouched((current) => ({ ...current, [key]: true }));
-    setErrors((existing) => ({ ...existing, [key]: validate(draft)[key] }));
+    setErrors((existing) => ({ ...existing, [key]: validate(draft, room)[key] }));
   };
 
   const focusFirst = (found: Partial<Record<Field, string>>) => {
@@ -109,7 +119,7 @@ export function NewRequestForm({
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setFormError(null);
-    const found = validate(draft);
+    const found = validate(draft, room);
     setErrors(found);
     setTouched(Object.fromEntries(ORDER.map((field) => [field, true])));
     const count = Object.values(found).filter(Boolean).length;
@@ -120,15 +130,18 @@ export function NewRequestForm({
     }
 
     const body = new FormData();
-    body.set('buildingId', draft.buildingId);
-    if (draft.floor !== '') body.set('floor', draft.floor);
-    body.set('location', draft.location.trim());
+    if (room) {
+      body.set('roomId', room.id);
+    } else {
+      body.set('buildingCode', draft.buildingCode);
+      if (draft.floor !== '') body.set('floor', draft.floor);
+      body.set('location', draft.location.trim());
+    }
     body.set('categoryId', draft.categoryId);
     body.set('equipment', draft.equipment.trim());
     if (draft.assetNumber.trim()) body.set('assetNumber', draft.assetNumber.trim());
     body.set('description', draft.description.trim());
     body.set('priority', draft.priority);
-    if (qrTagId) body.set('qrTagId', qrTagId);
     for (const photo of photos) body.append('photos', photo.file, photo.file.name);
 
     setSubmitting(true);
@@ -184,56 +197,68 @@ export function NewRequestForm({
         </p>
       ) : null}
 
-      <fieldset className="space-y-4">
-        <legend className="mb-2 font-display text-headline-md text-on-surface">เกิดที่ไหน</legend>
-        <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-          <FormField id="f-buildingId" label="อาคาร" required error={fieldError('buildingId')}>
-            <select
-              {...control('buildingId')}
+      {room ? null : (
+        <fieldset className="space-y-4">
+          <legend className="mb-2 font-display text-headline-md text-on-surface">เกิดที่ไหน</legend>
+          <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
+            <FormField id="f-buildingCode" label="อาคาร" required error={fieldError('buildingCode')}>
+              <select
+                {...control('buildingCode')}
+                aria-required="true"
+                value={draft.buildingCode}
+                onChange={(event) => set('buildingCode', event.target.value)}
+              >
+                <option value="">เลือกอาคาร</option>
+                {buildings.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+            <FormField id="f-floor" label="ชั้น" error={fieldError('floor')}>
+              <select
+                {...control('floor')}
+                value={draft.floor}
+                onChange={(event) => set('floor', event.target.value)}
+              >
+                <option value="">ไม่ระบุ</option>
+                {FLOORS.map((floor) => (
+                  <option key={floor} value={String(floor)}>
+                    {floorLabel(floor)}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+          </div>
+          <FormField
+            id="f-location"
+            label="ห้อง / จุดที่ชำรุด"
+            required
+            hint="เช่น ห้องปฏิบัติการคอมพิวเตอร์ 1 (CS-201) หรือ ห้องน้ำชายฝั่งทิศเหนือ"
+            error={fieldError('location')}
+          >
+            <input
+              {...control('location', 'hint')}
               aria-required="true"
-              value={draft.buildingId}
-              onChange={(event) => set('buildingId', event.target.value)}
-            >
-              <option value="">เลือกอาคาร</option>
-              {buildings.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              maxLength={150}
+              value={draft.location}
+              onChange={(event) => set('location', event.target.value)}
+              autoComplete="off"
+            />
           </FormField>
-          <FormField id="f-floor" label="ชั้น" error={fieldError('floor')}>
-            <select
-              {...control('floor')}
-              value={draft.floor}
-              onChange={(event) => set('floor', event.target.value)}
-            >
-              <option value="">ไม่ระบุ</option>
-              {FLOORS.map((floor) => (
-                <option key={floor} value={String(floor)}>
-                  {floorLabel(floor)}
-                </option>
-              ))}
-            </select>
-          </FormField>
-        </div>
-        <FormField
-          id="f-location"
-          label="ห้อง / จุดที่ชำรุด"
-          required
-          hint="เช่น ห้องปฏิบัติการคอมพิวเตอร์ 1 (CS-201) หรือ ห้องน้ำชายฝั่งทิศเหนือ"
-          error={fieldError('location')}
-        >
-          <input
-            {...control('location', 'hint')}
-            aria-required="true"
-            maxLength={150}
-            value={draft.location}
-            onChange={(event) => set('location', event.target.value)}
-            autoComplete="off"
-          />
-        </FormField>
-      </fieldset>
+        </fieldset>
+      )}
+
+      <SimilarRequests
+        buildingCode={room ? room.buildingCode : draft.buildingCode}
+        location={room ? room.code : draft.location}
+        assetNumber={draft.assetNumber}
+        onFollowed={() => {
+          dirty.current = false;
+          setSubmitting(true);
+        }}
+      />
 
       <fieldset className="space-y-4">
         <legend className="mb-2 font-display text-headline-md text-on-surface">ชำรุดอย่างไร</legend>
@@ -300,6 +325,16 @@ export function NewRequestForm({
             onChange={(event) => set('description', event.target.value)}
           />
         </FormField>
+        <TriageHint
+          text={`${draft.equipment} ${draft.description}`}
+          categories={categories}
+          categoryId={draft.categoryId}
+          priority={draft.priority}
+          onApply={(next) => {
+            if (next.categoryId) set('categoryId', next.categoryId);
+            if (next.priority) set('priority', next.priority);
+          }}
+        />
       </fieldset>
 
       <fieldset className="space-y-3">

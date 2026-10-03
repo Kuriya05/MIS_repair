@@ -1,117 +1,80 @@
 {
   "openapi": "3.0.0",
   "paths": {
-    "/api/health": {
-      "get": {
-        "operationId": "Health_health",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/HealthDto"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "ตรวจสถานะระบบ (public)",
-        "tags": [
-          "health"
-        ]
-      }
-    },
     "/api/v1/me": {
       "get": {
         "operationId": "Me_me",
         "parameters": [],
         "responses": {
           "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/MeDto"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
+            "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "ตัวตนของผู้เรียก + role/permission ในระบบนี้",
         "tags": [
-          "me"
+          "Me"
         ]
-      },
-      "patch": {
-        "operationId": "Me_update",
+      }
+    },
+    "/auth/login": {
+      "get": {
+        "operationId": "Sso_login",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateMyProfileDto"
-              }
-            }
+        "responses": {
+          "200": {
+            "description": ""
           }
         },
+        "tags": [
+          "Sso"
+        ]
+      }
+    },
+    "/auth/callback": {
+      "get": {
+        "operationId": "Sso_callback",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sso"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "Sso_logout",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sso"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "Health_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/profiles/me": {
+      "get": {
+        "operationId": "Profiles_me",
+        "parameters": [],
         "responses": {
           "200": {
             "description": "",
@@ -131,35 +94,15 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/MeDto"
+                      "$ref": "#/components/schemas/MyProfileDto"
                     }
                   }
                 }
               }
             }
           },
-          "400": {
-            "description": "BAD_REQUEST / VALIDATION_ERROR",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
           "401": {
             "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
             "content": {
               "application/json": {
                 "schema": {
@@ -174,15 +117,15 @@
             "bearer": []
           }
         ],
-        "summary": "แก้ข้อมูลติดต่อของตัวเอง (ชื่อที่แสดง เบอร์โทร หน่วยงาน)",
+        "summary": "ผู้เรียกในมุมของระบบแจ้งซ่อม (ชื่อจาก Core Hub · role ที่ใช้จริง · สิทธิ์ · รูป)",
         "tags": [
-          "me"
+          "profiles"
         ]
       }
     },
-    "/api/v1/me/avatar": {
+    "/api/v1/profiles/me/avatar": {
       "post": {
-        "operationId": "Me_uploadAvatar",
+        "operationId": "Profiles_uploadAvatar",
         "parameters": [],
         "requestBody": {
           "required": true,
@@ -222,7 +165,7 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/MeDto"
+                      "$ref": "#/components/schemas/ProfileDto"
                     }
                   }
                 }
@@ -277,11 +220,11 @@
         ],
         "summary": "เปลี่ยนรูปโปรไฟล์ของตัวเอง (JPG · PNG · WebP ไม่เกิน 2 MB ในช่อง avatar)",
         "tags": [
-          "me"
+          "profiles"
         ]
       },
       "delete": {
-        "operationId": "Me_removeAvatar",
+        "operationId": "Profiles_removeAvatar",
         "parameters": [],
         "responses": {
           "200": {
@@ -357,7 +300,7 @@
         ],
         "summary": "ลบรูปโปรไฟล์ของตัวเอง (กลับไปใช้อักษรย่อ)",
         "tags": [
-          "me"
+          "profiles"
         ]
       }
     },
@@ -384,16 +327,6 @@
               "maximum": 100,
               "default": 20,
               "type": "number"
-            }
-          },
-          {
-            "name": "q",
-            "required": false,
-            "in": "query",
-            "description": "ค้นจากชื่อ อีเมล หรือหน่วยงาน",
-            "schema": {
-              "maxLength": 100,
-              "type": "string"
             }
           },
           {
@@ -479,7 +412,237 @@
             "bearer": []
           }
         ],
-        "summary": "ผู้ใช้ที่เคยเข้าระบบนี้",
+        "summary": "ผู้ที่เคยเข้าระบบนี้ตาม role (ใช้เลือกช่างตอนมอบหมายงาน)",
+        "tags": [
+          "profiles"
+        ]
+      }
+    },
+    "/api/v1/profiles/people": {
+      "get": {
+        "operationId": "Profiles_people",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "ค้นในรหัสและชื่อ (Core Hub)",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "personType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "STUDENT",
+              "type": "string",
+              "enum": [
+                "STUDENT",
+                "STAFF"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data",
+                    "meta"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PersonListItemDto"
+                      }
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/PageMetaDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "รายชื่อนักศึกษา/บุคลากรจาก Core Hub + จำนวนใบแจ้งซ่อมในระบบนี้",
+        "tags": [
+          "profiles"
+        ]
+      }
+    },
+    "/api/v1/profiles/technicians/{personCode}": {
+      "put": {
+        "operationId": "Profiles_setTechnician",
+        "parameters": [
+          {
+            "name": "personCode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetTechnicianDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT — ชนกฎธุรกิจ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "แต่งตั้ง/ถอดถอนช่างซ่อมบำรุง (บุคลากรสายสนับสนุนจาก Core Hub)",
         "tags": [
           "profiles"
         ]
@@ -589,117 +752,6 @@
           }
         ],
         "summary": "รูปโปรไฟล์ (image/jpeg · image/png · image/webp)",
-        "tags": [
-          "profiles"
-        ]
-      }
-    },
-    "/api/v1/profiles/{id}": {
-      "patch": {
-        "operationId": "Profiles_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProfileDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/ProfileDto"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BAD_REQUEST / VALIDATION_ERROR",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NOT_FOUND",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "CONFLICT — ชนกฎธุรกิจ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "แต่งตั้ง/ถอดถอนช่างซ่อมบำรุง",
         "tags": [
           "profiles"
         ]
@@ -863,7 +915,7 @@
             "name": "q",
             "required": false,
             "in": "query",
-            "description": "ค้นจากชื่อหรือรหัส",
+            "description": "ค้นจากชื่อหรือ code",
             "schema": {
               "maxLength": 100,
               "type": "string"
@@ -873,7 +925,7 @@
             "name": "isActive",
             "required": false,
             "in": "query",
-            "description": "true = เฉพาะที่เปิดใช้งาน (ใช้ในฟอร์มแจ้งซ่อม)",
+            "description": "ใส่ได้เพื่อความเข้ากันได้ — รายการแสดงเฉพาะอาคารที่ Core Hub เปิดใช้งานเสมอ",
             "schema": {
               "type": "boolean"
             }
@@ -941,6 +993,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -948,20 +1010,234 @@
             "bearer": []
           }
         ],
-        "summary": "รายการอาคาร",
+        "summary": "รายการอาคาร (จาก Core Hub)",
         "tags": [
           "buildings"
         ]
+      }
+    },
+    "/api/v1/buildings/{code}": {
+      "get": {
+        "operationId": "Buildings_get",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/BuildingDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "ข้อมูลอาคารตาม code ของ Core Hub",
+        "tags": [
+          "buildings"
+        ]
+      }
+    },
+    "/api/v1/rooms": {
+      "get": {
+        "operationId": "Rooms_list",
+        "parameters": [
+          {
+            "name": "buildingCode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "CS",
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "ค้นจากรหัสหรือชื่อห้อง",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "roomType",
+            "required": false,
+            "in": "query",
+            "description": "ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ",
+            "schema": {
+              "$ref": "#/components/schemas/RoomType"
+            }
+          },
+          {
+            "name": "isActive",
+            "required": false,
+            "in": "query",
+            "description": "true = เฉพาะห้องที่เปิดใช้งาน",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RoomDto"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "ห้องทั้งหมด (กรองตามอาคาร) พร้อมสรุปสถานะเครื่องในห้อง",
+        "tags": [
+          "rooms"
+        ]
       },
       "post": {
-        "operationId": "Buildings_create",
+        "operationId": "Rooms_create",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateBuildingDto"
+                "$ref": "#/components/schemas/CreateRoomDto"
               }
             }
           }
@@ -985,7 +1261,7 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/BuildingDto"
+                      "$ref": "#/components/schemas/RoomDetailDto"
                     }
                   }
                 }
@@ -1022,8 +1298,8 @@
               }
             }
           },
-          "409": {
-            "description": "CONFLICT — ชนกฎธุรกิจ",
+          "503": {
+            "description": "SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1038,15 +1314,15 @@
             "bearer": []
           }
         ],
-        "summary": "เพิ่มอาคาร",
+        "summary": "เพิ่มห้อง (ระบบสุ่มรหัส QR ของห้องให้)",
         "tags": [
-          "buildings"
+          "rooms"
         ]
       }
     },
-    "/api/v1/buildings/{id}": {
+    "/api/v1/rooms/{id}": {
       "get": {
-        "operationId": "Buildings_get",
+        "operationId": "Rooms_get",
         "parameters": [
           {
             "name": "id",
@@ -1076,7 +1352,7 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/BuildingDto"
+                      "$ref": "#/components/schemas/RoomDetailDto"
                     }
                   }
                 }
@@ -1129,13 +1405,13 @@
             "bearer": []
           }
         ],
-        "summary": "ข้อมูลอาคาร",
+        "summary": "ห้อง + เครื่องทั้งหมดในห้องพร้อมสถานะ (แจ้งแล้ว / กำลังซ่อม / รออะไหล่)",
         "tags": [
-          "buildings"
+          "rooms"
         ]
       },
       "patch": {
-        "operationId": "Buildings_update",
+        "operationId": "Rooms_update",
         "parameters": [
           {
             "name": "id",
@@ -1151,7 +1427,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateBuildingDto"
+                "$ref": "#/components/schemas/UpdateRoomDto"
               }
             }
           }
@@ -1175,7 +1451,7 @@
                       ]
                     },
                     "data": {
-                      "$ref": "#/components/schemas/BuildingDto"
+                      "$ref": "#/components/schemas/RoomDetailDto"
                     }
                   }
                 }
@@ -1222,8 +1498,8 @@
               }
             }
           },
-          "409": {
-            "description": "CONFLICT — ชนกฎธุรกิจ",
+          "503": {
+            "description": "SERVICE_UNAVAILABLE — ติดต่อ Core Hub ไม่ได้ชั่วคราว (มี header Retry-After)",
             "content": {
               "application/json": {
                 "schema": {
@@ -1238,13 +1514,13 @@
             "bearer": []
           }
         ],
-        "summary": "แก้ไขอาคาร / เปิด-ปิดการใช้งาน",
+        "summary": "แก้ไขห้อง / เปิด-ปิดการใช้งาน",
         "tags": [
-          "buildings"
+          "rooms"
         ]
       },
       "delete": {
-        "operationId": "Buildings_remove",
+        "operationId": "Rooms_remove",
         "parameters": [
           {
             "name": "id",
@@ -1337,9 +1613,1305 @@
             "bearer": []
           }
         ],
-        "summary": "ลบอาคารที่ยังไม่มีข้อมูลอ้างถึง",
+        "summary": "ลบห้องที่ยังไม่มีเครื่องและใบแจ้งซ่อม",
         "tags": [
-          "buildings"
+          "rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/{id}/photo": {
+      "post": {
+        "operationId": "Rooms_uploadRoomPhoto",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "photo"
+                ],
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RoomDetailDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT — ชนกฎธุรกิจ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "อัปโหลด/เปลี่ยนรูปห้อง (JPG · PNG · WebP ไม่เกิน 5 MB ในช่อง photo)",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "delete": {
+        "operationId": "Rooms_removeRoomPhoto",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeletedDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT — ชนกฎธุรกิจ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "ลบรูปห้อง",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "get": {
+        "operationId": "Rooms_roomPhoto",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ไฟล์รูป",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "ไฟล์รูปห้อง (image/jpeg · image/png · image/webp)",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/{id}/equipment": {
+      "post": {
+        "operationId": "Rooms_addEquipment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEquipmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/RoomDetailDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "เพิ่มเครื่องในห้อง (ใส่ count เพื่อเพิ่มหลายเครื่อง เช่น PC-01 ถึง PC-30)",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/v1/equipment": {
+      "get": {
+        "operationId": "Rooms_inventory",
+        "parameters": [
+          {
+            "name": "buildingCode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "CS",
+              "type": "string"
+            }
+          },
+          {
+            "name": "roomId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "description": "ประเภทอุปกรณ์ (หมวดหมู่งานซ่อม)",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "ค้นจากป้าย ชื่อ/รุ่น หรือเลขครุภัณฑ์",
+            "schema": {
+              "maxLength": 100,
+              "type": "string"
+            }
+          },
+          {
+            "name": "isActive",
+            "required": false,
+            "in": "query",
+            "description": "true = เฉพาะเครื่องที่เปิดใช้งาน",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/EquipmentInventoryDto"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "ทะเบียนครุภัณฑ์ — เครื่องทุกห้อง (กรองตามอาคาร/ห้อง/ประเภท/คำค้น) ไม่แบ่งหน้า สูงสุด 2000 แถว",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/v1/equipment/{id}": {
+      "get": {
+        "operationId": "Rooms_getEquipment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/EquipmentDetailDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "ข้อมูลเครื่อง + สถานะ + ประวัติการแจ้งซ่อม",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "patch": {
+        "operationId": "Rooms_updateEquipment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEquipmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/EquipmentDetailDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "แก้ไขเครื่อง / ย้ายห้อง / เปิด-ปิดการใช้งาน",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "delete": {
+        "operationId": "Rooms_removeEquipment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeletedDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT — ชนกฎธุรกิจ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "ลบเครื่องที่ยังไม่เคยแจ้งซ่อม",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/v1/equipment/{id}/photo": {
+      "post": {
+        "operationId": "Rooms_uploadEquipmentPhoto",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "photo"
+                ],
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/EquipmentDetailDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT — ชนกฎธุรกิจ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "อัปโหลด/เปลี่ยนรูปเครื่อง (JPG · PNG · WebP ไม่เกิน 5 MB ในช่อง photo)",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "delete": {
+        "operationId": "Rooms_removeEquipmentPhoto",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/DeletedDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT — ชนกฎธุรกิจ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "ลบรูปเครื่อง",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "get": {
+        "operationId": "Rooms_equipmentPhoto",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ไฟล์รูป",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "ไฟล์รูปเครื่อง (image/jpeg · image/png · image/webp)",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/v1/qr-codes/{code}": {
+      "get": {
+        "operationId": "Rooms_resolveQr",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/QrTargetDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "สแกน QR — รหัสนี้เป็นของห้องหรือเครื่องไหน",
+        "tags": [
+          "rooms"
         ]
       }
     },
@@ -1880,7 +3452,7 @@
             "name": "scope",
             "required": false,
             "in": "query",
-            "description": "mine = ที่ฉันแจ้ง · assigned = งานที่ฉันรับผิดชอบ · all = ทั้งหมด (ช่าง/ผู้ดูแล)",
+            "description": "mine = ที่ฉันแจ้ง + ที่ฉันกด \"ฉันก็เจอ\" · assigned = งานที่ฉันรับผิดชอบ · all = ทั้งหมด (ช่าง/ผู้ดูแล)",
             "schema": {
               "default": "mine",
               "type": "string",
@@ -1922,11 +3494,12 @@
             }
           },
           {
-            "name": "buildingId",
+            "name": "buildingCode",
             "required": false,
             "in": "query",
+            "description": "code ของอาคารใน Core Hub",
             "schema": {
-              "format": "uuid",
+              "example": "CS",
               "type": "string"
             }
           },
@@ -2188,6 +3761,304 @@
           }
         ],
         "summary": "แจ้งซ่อม (แนบรูปได้สูงสุด 5 รูปในช่อง photos)",
+        "tags": [
+          "repair-requests"
+        ]
+      }
+    },
+    "/api/v1/repair-requests/similar": {
+      "get": {
+        "operationId": "RepairRequests_similar",
+        "parameters": [
+          {
+            "name": "buildingCode",
+            "required": true,
+            "in": "query",
+            "description": "code ของอาคารใน Core Hub",
+            "schema": {
+              "example": "CS",
+              "type": "string"
+            }
+          },
+          {
+            "name": "location",
+            "required": false,
+            "in": "query",
+            "description": "ห้อง/จุด — เทียบแบบมีคำนี้อยู่ (ไม่สนตัวพิมพ์)",
+            "schema": {
+              "maxLength": 150,
+              "type": "string"
+            }
+          },
+          {
+            "name": "assetNumber",
+            "required": false,
+            "in": "query",
+            "description": "เลขครุภัณฑ์ — ตรงกัน = อุปกรณ์ชิ้นเดียวกัน",
+            "schema": {
+              "maxLength": 50,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SimilarRepairRequestDto"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "ใบที่ยังเปิดอยู่และน่าจะเป็นเรื่องเดียวกัน (ใช้ตอนกรอกฟอร์มแจ้งซ่อม)",
+        "tags": [
+          "repair-requests"
+        ]
+      }
+    },
+    "/api/v1/repair-requests/{id}/followers": {
+      "post": {
+        "operationId": "RepairRequests_follow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/FollowStateDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT — ชนกฎธุรกิจ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "\"ฉันก็เจอ\" — ติดตามใบแจ้งซ่อมเดิมแทนการแจ้งซ้ำ",
+        "tags": [
+          "repair-requests"
+        ]
+      }
+    },
+    "/api/v1/repair-requests/{id}/followers/me": {
+      "delete": {
+        "operationId": "RepairRequests_unfollow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/FollowStateDto"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST / VALIDATION_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "เลิกติดตามใบแจ้งซ่อมที่กด \"ฉันก็เจอ\" ไว้",
         "tags": [
           "repair-requests"
         ]
@@ -3381,495 +5252,6 @@
         ]
       }
     },
-    "/api/v1/qr-tags": {
-      "get": {
-        "operationId": "QrTags_list",
-        "parameters": [
-          {
-            "name": "page",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "default": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "maximum": 100,
-              "default": 20,
-              "type": "number"
-            }
-          },
-          {
-            "name": "code",
-            "required": false,
-            "in": "query",
-            "description": "ค้นหาด้วยรหัสบนสติกเกอร์ (ใช้ตอนสแกน)",
-            "schema": {
-              "example": "K7QM4TZP",
-              "type": "string"
-            }
-          },
-          {
-            "name": "buildingId",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "name": "q",
-            "required": false,
-            "in": "query",
-            "description": "ค้นจากสถานที่ อุปกรณ์ หรือเลขครุภัณฑ์",
-            "schema": {
-              "maxLength": 100,
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "success",
-                    "data",
-                    "meta"
-                  ],
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/QrTagDto"
-                      }
-                    },
-                    "meta": {
-                      "$ref": "#/components/schemas/PageMetaDto"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BAD_REQUEST / VALIDATION_ERROR",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "รายการสติกเกอร์ QR (?code= สำหรับหน้าสแกน)",
-        "tags": [
-          "qr-tags"
-        ]
-      },
-      "post": {
-        "operationId": "QrTags_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateQrTagDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/QrTagDto"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BAD_REQUEST / VALIDATION_ERROR",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "สร้างสติกเกอร์ QR (ระบบสุ่มรหัส 8 ตัวให้)",
-        "tags": [
-          "qr-tags"
-        ]
-      }
-    },
-    "/api/v1/qr-tags/{id}": {
-      "get": {
-        "operationId": "QrTags_get",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/QrTagDto"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BAD_REQUEST / VALIDATION_ERROR",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NOT_FOUND",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "ข้อมูลสติกเกอร์ QR",
-        "tags": [
-          "qr-tags"
-        ]
-      },
-      "patch": {
-        "operationId": "QrTags_update",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateQrTagDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/QrTagDto"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BAD_REQUEST / VALIDATION_ERROR",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NOT_FOUND",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "แก้ไขสถานที่/อุปกรณ์ของสติกเกอร์ (รหัสเดิม ไม่ต้องพิมพ์ใหม่)",
-        "tags": [
-          "qr-tags"
-        ]
-      },
-      "delete": {
-        "operationId": "QrTags_remove",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "required": [
-                    "success",
-                    "data"
-                  ],
-                  "properties": {
-                    "success": {
-                      "type": "boolean",
-                      "enum": [
-                        true
-                      ]
-                    },
-                    "data": {
-                      "$ref": "#/components/schemas/DeletedDto"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "BAD_REQUEST / VALIDATION_ERROR",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "UNAUTHORIZED — ไม่มี token หรือ token ใช้ไม่ได้",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "FORBIDDEN — สิทธิ์ไม่พอ",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "NOT_FOUND",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorEnvelopeDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "ลบสติกเกอร์ (ใบแจ้งซ่อมเดิมยังอยู่)",
-        "tags": [
-          "qr-tags"
-        ]
-      }
-    },
     "/api/v1/statistics": {
       "get": {
         "operationId": "Statistics_summary",
@@ -3891,6 +5273,16 @@
             "description": "ถึงวันที่ (รวมวันนั้น) · ค่าเริ่มต้นวันนี้",
             "schema": {
               "example": "2026-09-30",
+              "type": "string"
+            }
+          },
+          {
+            "name": "roomId",
+            "required": false,
+            "in": "query",
+            "description": "เฉพาะใบแจ้งซ่อมของห้องนี้ (ทุกสถิติ)",
+            "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -3965,8 +5357,8 @@
     }
   },
   "info": {
-    "title": "csmju-repair API",
-    "description": "ระบบแจ้งซ่อม — ระบบย่อยของ CSMJU2030 · ทุก endpoint ใต้ /api/v1 ต้องมี Core Hub access token (Authorization: Bearer หรือคุกกี้ core_hub_access_token) · response ห่อด้วย envelope มาตรฐาน",
+    "title": "csmju-maintenance-request API",
+    "description": "ระบบแจ้งซ่อม — ระบบย่อยของ CSMJU2030 · ทุก endpoint ใต้ /api/v1 ต้องมี Core Hub access token (Authorization: Bearer หรือคุกกี้ csmju_maintenance_request_access_token) · response ห่อด้วย envelope มาตรฐาน",
     "version": "1.0.0",
     "contact": {}
   },
@@ -3981,26 +5373,6 @@
       }
     },
     "schemas": {
-      "HealthDto": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "ok"
-            ]
-          },
-          "service": {
-            "type": "string",
-            "example": "csmju-repair",
-            "description": "ต้องตรงกับ name ใน subsystem.yaml"
-          }
-        },
-        "required": [
-          "status",
-          "service"
-        ]
-      },
       "ErrorCode": {
         "type": "string",
         "enum": [
@@ -4010,7 +5382,9 @@
           "FORBIDDEN",
           "NOT_FOUND",
           "CONFLICT",
-          "INTERNAL_ERROR"
+          "TOO_MANY_REQUESTS",
+          "INTERNAL_ERROR",
+          "SERVICE_UNAVAILABLE"
         ]
       },
       "ErrorBodyDto": {
@@ -4057,7 +5431,20 @@
           "error"
         ]
       },
-      "MeDto": {
+      "SessionDto": {
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "token หมดอายุเมื่อไร — ต่ออายุล่วงหน้าผ่าน /auth/login"
+          }
+        },
+        "required": [
+          "expiresAt"
+        ]
+      },
+      "MyProfileDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -4065,16 +5452,14 @@
             "example": "user-003",
             "description": "เท่ากับ claim `sub` ของ token"
           },
-          "email": {
-            "type": "string",
-            "example": "staff@core.local"
-          },
           "coreRole": {
             "type": "string",
             "enum": [
               "student",
               "alumni",
               "staff",
+              "lecturer",
+              "guest",
               "admin"
             ],
             "description": "เท่ากับ claim `role` ของ token"
@@ -4085,97 +5470,51 @@
               "USER",
               "TECHNICIAN",
               "ADMIN"
-            ]
+            ],
+            "description": "role ที่ใช้จริง (รวมการแต่งตั้งช่าง)"
           },
           "permissions": {
             "example": [
-              "repair-request:create",
-              "repair-request:read:own"
+              "repair-request:create"
             ],
             "type": "array",
             "items": {
               "type": "string"
             }
           },
+          "personCode": {
+            "type": "string",
+            "nullable": true,
+            "description": "รหัสนักศึกษา/บุคลากรจาก Core Hub (GET /people/me) · null = บัญชียังไม่ผูกกับบุคคลในทะเบียน"
+          },
           "displayName": {
             "type": "string",
-            "example": "สมชาย ใจดี",
-            "description": "ถ้ายังไม่ตั้งชื่อ จะใช้ส่วนหน้าของอีเมล"
+            "example": "นายสมชาย ใจดี",
+            "description": "ชื่อจาก Core Hub (GET /people/me) · ดูไม่ได้ = รหัส"
           },
-          "hasDisplayName": {
+          "nameFromCoreHub": {
             "type": "boolean",
-            "description": "false = ยังไม่ได้ตั้งชื่อที่แสดง (ควรชวนผู้ใช้กรอกโปรไฟล์)"
-          },
-          "phone": {
-            "type": "string",
-            "nullable": true
-          },
-          "workUnit": {
-            "type": "string",
-            "nullable": true
+            "description": "false = ชื่อด้านบนไม่ได้มาจาก Core Hub"
           },
           "avatarUrl": {
             "type": "string",
             "nullable": true,
             "description": "รูปโปรไฟล์ (GET ได้เมื่อเข้าสู่ระบบแล้ว) · null = ยังไม่มีรูป ให้แสดงอักษรย่อแทน"
           },
-          "sessionExpiresAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "token หมดอายุเมื่อไร — ต้องเข้าผ่าน Core Hub ใหม่หลังจากนี้"
+          "session": {
+            "$ref": "#/components/schemas/SessionDto"
           }
         },
         "required": [
           "id",
-          "email",
           "coreRole",
           "subsystemRole",
           "permissions",
+          "personCode",
           "displayName",
-          "hasDisplayName",
-          "phone",
-          "workUnit",
+          "nameFromCoreHub",
           "avatarUrl",
-          "sessionExpiresAt"
-        ]
-      },
-      "UpdateMyProfileDto": {
-        "type": "object",
-        "properties": {
-          "displayName": {
-            "type": "string",
-            "maxLength": 100,
-            "description": "ส่ง \"\" เพื่อล้างค่า"
-          },
-          "phone": {
-            "type": "string",
-            "description": "ตัวเลข 9–10 หลักขึ้นต้นด้วย 0 · ส่ง \"\" เพื่อล้างค่า",
-            "example": "0812345678"
-          },
-          "workUnit": {
-            "type": "string",
-            "maxLength": 100,
-            "description": "ห้อง/หน่วยงานที่ติดต่อได้ · ส่ง \"\" เพื่อล้างค่า"
-          }
-        }
-      },
-      "DeletedDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "deleted": {
-            "type": "boolean",
-            "enum": [
-              true
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "deleted"
+          "session"
         ]
       },
       "ProfileDto": {
@@ -4184,16 +5523,18 @@
           "id": {
             "type": "string",
             "format": "uuid",
-            "description": "id ของโปรไฟล์ในระบบนี้ (ใช้กับ PATCH /profiles/:id)"
+            "description": "id ของโปรไฟล์ในระบบนี้"
           },
           "coreUserId": {
             "type": "string",
             "example": "user-003",
             "description": "claim `sub` จาก Core Hub"
           },
-          "email": {
+          "personCode": {
             "type": "string",
-            "example": "staff@core.local"
+            "nullable": true,
+            "example": "somsak.m",
+            "description": "รหัสนักศึกษา/บุคลากรจาก Core Hub (GET /people/me) · null = บัญชียังไม่ผูกกับบุคคลในทะเบียน"
           },
           "coreRole": {
             "type": "string",
@@ -4201,6 +5542,8 @@
               "student",
               "alumni",
               "staff",
+              "lecturer",
+              "guest",
               "admin"
             ]
           },
@@ -4219,17 +5562,8 @@
           },
           "displayName": {
             "type": "string",
-            "example": "สมชาย ใจดี"
-          },
-          "phone": {
-            "type": "string",
-            "nullable": true,
-            "example": "0812345678"
-          },
-          "workUnit": {
-            "type": "string",
-            "nullable": true,
-            "example": "งานอาคารสถานที่"
+            "example": "somsak.m",
+            "description": "รายการไม่หาชื่อจาก Core Hub ทีละแถว จึงเป็น personCode (reference-data.md ข้อ 7.2)"
           },
           "avatarUrl": {
             "type": "string",
@@ -4240,30 +5574,37 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
           }
         },
         "required": [
           "id",
           "coreUserId",
-          "email",
+          "personCode",
           "coreRole",
           "subsystemRole",
           "isTechnician",
           "displayName",
-          "phone",
-          "workUnit",
           "avatarUrl",
-          "lastSeenAt",
-          "createdAt",
-          "updatedAt"
+          "lastSeenAt"
+        ]
+      },
+      "DeletedDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deleted": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "deleted"
         ]
       },
       "PageMetaDto": {
@@ -4293,12 +5634,83 @@
           "totalPages"
         ]
       },
-      "UpdateProfileDto": {
+      "PersonListItemDto": {
+        "type": "object",
+        "properties": {
+          "personCode": {
+            "type": "string",
+            "example": "6504101234"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "นางสาวกริญญา ทาเกร"
+          },
+          "personType": {
+            "type": "string",
+            "enum": [
+              "STUDENT",
+              "STAFF"
+            ]
+          },
+          "staffType": {
+            "type": "string",
+            "nullable": true,
+            "description": "ประเภทบุคลากร เช่น LECTURER"
+          },
+          "status": {
+            "type": "string",
+            "example": "ACTIVE"
+          },
+          "departmentName": {
+            "type": "string",
+            "nullable": true
+          },
+          "hasProfile": {
+            "type": "boolean",
+            "description": "เคยเข้าระบบแจ้งซ่อมแล้ว"
+          },
+          "isTechnician": {
+            "type": "boolean"
+          },
+          "canBeTechnician": {
+            "type": "boolean",
+            "description": "แต่งตั้งเป็นช่างได้ (บุคลากรสายสนับสนุนที่มีบัญชีใน Core Hub)"
+          },
+          "requestCount": {
+            "type": "number",
+            "description": "ใบแจ้งซ่อมที่คนนี้แจ้งในระบบนี้"
+          },
+          "openRequestCount": {
+            "type": "number",
+            "description": "ที่ยังไม่ปิดงาน"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "personCode",
+          "fullName",
+          "personType",
+          "staffType",
+          "status",
+          "departmentName",
+          "hasProfile",
+          "isTechnician",
+          "canBeTechnician",
+          "requestCount",
+          "openRequestCount",
+          "lastSeenAt"
+        ]
+      },
+      "SetTechnicianDto": {
         "type": "object",
         "properties": {
           "isTechnician": {
             "type": "boolean",
-            "description": "แต่งตั้ง/ถอดถอนช่างซ่อมบำรุง (เฉพาะผู้ใช้ core role staff)"
+            "description": "แต่งตั้ง (true) / ถอดถอน (false) ช่างซ่อมบำรุง"
           }
         },
         "required": [
@@ -4308,90 +5720,978 @@
       "BuildingDto": {
         "type": "object",
         "properties": {
+          "code": {
+            "type": "string",
+            "example": "CS",
+            "description": "code ของอาคารใน Core Hub — ใช้อ้างอิงในห้องและใบแจ้งซ่อม"
+          },
+          "name": {
+            "type": "string",
+            "example": "อาคารวิทยาการคอมพิวเตอร์"
+          },
+          "nameEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "false = Core Hub ปิดใช้งานแล้ว"
+          },
+          "roomCount": {
+            "type": "number",
+            "description": "ห้องที่ผู้ดูแลระบบแจ้งซ่อมเพิ่มไว้"
+          },
+          "equipmentCount": {
+            "type": "number",
+            "description": "เครื่องในห้องต่าง ๆ ของอาคาร"
+          },
+          "requestCount": {
+            "type": "number",
+            "description": "ใบแจ้งซ่อมทั้งหมดของอาคาร"
+          },
+          "openRequestCount": {
+            "type": "number",
+            "description": "ใบที่ยังไม่ปิดงาน"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "nameEn",
+          "isActive",
+          "roomCount",
+          "equipmentCount",
+          "requestCount",
+          "openRequestCount"
+        ]
+      },
+      "BuildingRefDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "CS"
+          },
+          "name": {
+            "type": "string",
+            "description": "ชื่ออาคารจาก Core Hub · หาไม่ได้ = code"
+          },
+          "isActive": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "false = Core Hub ปิดใช้งานแล้ว · null = หาไม่เจอในข้อมูลกลางตอนนี้"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "isActive"
+        ]
+      },
+      "RoomType": {
+        "type": "string",
+        "enum": [
+          "LAB",
+          "LECTURE",
+          "NETWORK_LAB",
+          "MEETING",
+          "OFFICE",
+          "OTHER"
+        ],
+        "description": "ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ"
+      },
+      "RoomStateSummaryDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "ok": {
+            "type": "number"
+          },
+          "reported": {
+            "type": "number"
+          },
+          "inProgress": {
+            "type": "number"
+          },
+          "onHold": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total",
+          "ok",
+          "reported",
+          "inProgress",
+          "onHold"
+        ]
+      },
+      "RoomDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "buildingCode": {
+            "type": "string",
+            "example": "CS"
+          },
+          "building": {
+            "$ref": "#/components/schemas/BuildingRefDto"
+          },
+          "code": {
+            "type": "string",
+            "example": "CS-201"
+          },
+          "name": {
+            "type": "string",
+            "example": "ห้องปฏิบัติการคอมพิวเตอร์ 1"
+          },
+          "floor": {
+            "type": "number",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "roomType": {
+            "description": "ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoomType"
+              }
+            ]
+          },
+          "capacity": {
+            "type": "number",
+            "nullable": true,
+            "description": "จำนวนที่นั่ง"
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "/api/v1/rooms/0d6f…/photo?v=1759480000000",
+            "description": "URL รูปห้อง (?v= เปลี่ยนเมื่อแก้ไข) · null = ยังไม่มีรูป"
+          },
+          "qrCode": {
+            "type": "string",
+            "description": "รหัสใน QR ของห้อง (/q/<qrCode>)"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "equipmentStates": {
+            "description": "สถานะเครื่องทั้งหมดในห้อง",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoomStateSummaryDto"
+              }
+            ]
+          },
+          "openRequestCount": {
+            "type": "number",
+            "description": "ใบแจ้งซ่อมของห้องนี้ที่ยังไม่ปิด (รวมที่ไม่ได้ผูกเครื่อง)"
+          }
+        },
+        "required": [
+          "id",
+          "buildingCode",
+          "building",
+          "code",
+          "name",
+          "floor",
+          "description",
+          "roomType",
+          "capacity",
+          "photoUrl",
+          "qrCode",
+          "isActive",
+          "equipmentStates",
+          "openRequestCount"
+        ]
+      },
+      "CategoryIcon": {
+        "type": "string",
+        "enum": [
+          "computer",
+          "monitor",
+          "projector",
+          "aircon",
+          "fan",
+          "light",
+          "network",
+          "audio",
+          "furniture",
+          "other"
+        ]
+      },
+      "EquipmentCategoryDto": {
+        "type": "object",
+        "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
           },
           "name": {
-            "type": "string",
-            "example": "อาคารเฉลิมพระเกียรติ"
+            "type": "string"
           },
-          "code": {
-            "type": "string",
-            "nullable": true,
-            "example": "CS1",
-            "description": "รหัสย่อบนป้าย/เอกสาร"
+          "icon": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryIcon"
+              }
+            ]
           },
-          "isActive": {
-            "type": "boolean",
-            "description": "false = ไม่แสดงในฟอร์มแจ้งซ่อม แต่ข้อมูลเดิมยังอ้างถึงได้"
-          },
-          "requestCount": {
-            "type": "number",
-            "description": "จำนวนใบแจ้งซ่อมที่อ้างถึงอาคารนี้"
-          },
-          "qrTagCount": {
-            "type": "number",
-            "description": "จำนวนสติกเกอร์ QR ของอาคารนี้"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
+          "symptoms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
           "name",
-          "code",
-          "isActive",
-          "requestCount",
-          "qrTagCount",
-          "createdAt",
-          "updatedAt"
+          "icon",
+          "symptoms"
         ]
       },
-      "CreateBuildingDto": {
+      "EquipmentState": {
+        "type": "string",
+        "enum": [
+          "OK",
+          "REPORTED",
+          "IN_PROGRESS",
+          "ON_HOLD"
+        ]
+      },
+      "RequestStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "ACCEPTED",
+          "IN_PROGRESS",
+          "ON_HOLD",
+          "COMPLETED",
+          "REJECTED",
+          "CANCELLED"
+        ]
+      },
+      "OpenRequestRefDto": {
         "type": "object",
         "properties": {
-          "name": {
+          "id": {
             "type": "string",
-            "minLength": 2,
-            "maxLength": 100,
-            "example": "อาคารเฉลิมพระเกียรติ"
+            "format": "uuid"
           },
           "code": {
             "type": "string",
-            "maxLength": 10,
-            "example": "CS1",
-            "description": "A–Z ตัวเลข และ - เท่านั้น"
+            "example": "RP-6910-0012"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RequestStatus"
+              }
+            ]
+          },
+          "equipment": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "affectedCount": {
+            "type": "number",
+            "description": "ผู้แจ้ง + คนที่กด \"ฉันก็เจอ\""
           }
         },
         "required": [
-          "name"
+          "id",
+          "code",
+          "status",
+          "equipment",
+          "createdAt",
+          "affectedCount"
         ]
       },
-      "UpdateBuildingDto": {
+      "EquipmentDto": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "example": "PC-01"
+          },
           "name": {
             "type": "string",
-            "minLength": 2,
-            "maxLength": 100
+            "example": "Dell OptiPlex 7090"
+          },
+          "assetNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "specs": {
+            "type": "string",
+            "nullable": true,
+            "description": "รายละเอียดเครื่องหลายบรรทัด"
+          },
+          "position": {
+            "type": "string",
+            "nullable": true,
+            "example": "แถว 2 ที่ 3"
+          },
+          "qrCode": {
+            "type": "string",
+            "example": "K7QM4TZP",
+            "description": "รหัสใน QR ของเครื่อง (/q/<qrCode>)"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "/api/v1/equipment/0d6f…/photo?v=1759480000000",
+            "description": "URL รูปเครื่อง (?v= เปลี่ยนเมื่อแก้ไข) · null = ยังไม่มีรูป"
+          },
+          "category": {
+            "$ref": "#/components/schemas/EquipmentCategoryDto"
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EquipmentState"
+              }
+            ]
+          },
+          "openRequest": {
+            "nullable": true,
+            "description": "ใบที่ยังไม่ปิดล่าสุดของเครื่องนี้",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OpenRequestRefDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "roomId",
+          "label",
+          "name",
+          "assetNumber",
+          "specs",
+          "position",
+          "qrCode",
+          "isActive",
+          "photoUrl",
+          "category",
+          "state",
+          "openRequest"
+        ]
+      },
+      "RoomDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "buildingCode": {
+            "type": "string",
+            "example": "CS"
+          },
+          "building": {
+            "$ref": "#/components/schemas/BuildingRefDto"
           },
           "code": {
             "type": "string",
+            "example": "CS-201"
+          },
+          "name": {
+            "type": "string",
+            "example": "ห้องปฏิบัติการคอมพิวเตอร์ 1"
+          },
+          "floor": {
+            "type": "number",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "roomType": {
+            "description": "ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoomType"
+              }
+            ]
+          },
+          "capacity": {
+            "type": "number",
             "nullable": true,
-            "maxLength": 10,
-            "description": "null = ล้างรหัส"
+            "description": "จำนวนที่นั่ง"
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "/api/v1/rooms/0d6f…/photo?v=1759480000000",
+            "description": "URL รูปห้อง (?v= เปลี่ยนเมื่อแก้ไข) · null = ยังไม่มีรูป"
+          },
+          "qrCode": {
+            "type": "string",
+            "description": "รหัสใน QR ของห้อง (/q/<qrCode>)"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "equipmentStates": {
+            "description": "สถานะเครื่องทั้งหมดในห้อง",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoomStateSummaryDto"
+              }
+            ]
+          },
+          "openRequestCount": {
+            "type": "number",
+            "description": "ใบแจ้งซ่อมของห้องนี้ที่ยังไม่ปิด (รวมที่ไม่ได้ผูกเครื่อง)"
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EquipmentDto"
+            }
+          },
+          "roomRequests": {
+            "description": "ใบที่ยังไม่ปิดของห้องที่ไม่ได้ผูกกับเครื่อง",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OpenRequestRefDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "buildingCode",
+          "building",
+          "code",
+          "name",
+          "floor",
+          "description",
+          "roomType",
+          "capacity",
+          "photoUrl",
+          "qrCode",
+          "isActive",
+          "equipmentStates",
+          "openRequestCount",
+          "equipment",
+          "roomRequests"
+        ]
+      },
+      "CreateRoomDto": {
+        "type": "object",
+        "properties": {
+          "buildingCode": {
+            "type": "string",
+            "example": "CS",
+            "description": "code ของอาคารใน Core Hub"
+          },
+          "code": {
+            "type": "string",
+            "example": "CS-201",
+            "description": "A–Z ตัวเลข และ - เท่านั้น"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 150,
+            "example": "ห้องปฏิบัติการคอมพิวเตอร์ 1"
+          },
+          "floor": {
+            "type": "number",
+            "nullable": true,
+            "minimum": -5,
+            "maximum": 99
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          },
+          "roomType": {
+            "description": "ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoomType"
+              }
+            ]
+          },
+          "capacity": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 1000,
+            "description": "จำนวนที่นั่ง"
+          }
+        },
+        "required": [
+          "buildingCode",
+          "code",
+          "name"
+        ]
+      },
+      "UpdateRoomDto": {
+        "type": "object",
+        "properties": {
+          "buildingCode": {
+            "type": "string",
+            "example": "CS"
+          },
+          "code": {
+            "type": "string",
+            "example": "CS-201"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 150
+          },
+          "floor": {
+            "type": "number",
+            "nullable": true,
+            "minimum": -5,
+            "maximum": 99
+          },
+          "description": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          },
+          "roomType": {
+            "description": "ประเภทห้อง: LAB = ห้องปฏิบัติการคอมพิวเตอร์ · LECTURE = ห้องบรรยาย · NETWORK_LAB = ห้องปฏิบัติการเครือข่าย · MEETING = ห้องประชุม · OFFICE = ห้องพัก/สำนักงาน · OTHER = อื่นๆ",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoomType"
+              }
+            ]
+          },
+          "capacity": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 1000,
+            "description": "จำนวนที่นั่ง"
           },
           "isActive": {
             "type": "boolean"
           }
         }
+      },
+      "CreateEquipmentDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ประเภทอุปกรณ์ (หมวดหมู่งานซ่อม)"
+          },
+          "label": {
+            "type": "string",
+            "example": "PC-01",
+            "description": "ป้ายบนเครื่อง ไม่ซ้ำในห้องเดียวกัน"
+          },
+          "name": {
+            "type": "string",
+            "example": "Dell OptiPlex 7090"
+          },
+          "assetNumber": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "specs": {
+            "type": "string",
+            "maxLength": 1000,
+            "example": "Intel Core i5-11500 · RAM 16 GB · SSD 512 GB"
+          },
+          "position": {
+            "type": "string",
+            "maxLength": 50,
+            "example": "แถว 2 ที่ 3"
+          },
+          "count": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "เพิ่มหลายเครื่องพร้อมกัน — ป้ายจะเป็น <label>-01, -02, … (เช่น PC → PC-01 ถึง PC-30)"
+          }
+        },
+        "required": [
+          "categoryId",
+          "label",
+          "name"
+        ]
+      },
+      "InventoryRoomRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "CS-201"
+          },
+          "name": {
+            "type": "string"
+          },
+          "floor": {
+            "type": "number",
+            "nullable": true
+          },
+          "buildingCode": {
+            "type": "string",
+            "example": "CS"
+          },
+          "roomType": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RoomType"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "floor",
+          "buildingCode",
+          "roomType"
+        ]
+      },
+      "EquipmentInventoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "example": "PC-01"
+          },
+          "name": {
+            "type": "string",
+            "example": "Dell OptiPlex 7090"
+          },
+          "assetNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "specs": {
+            "type": "string",
+            "nullable": true,
+            "description": "รายละเอียดเครื่องหลายบรรทัด"
+          },
+          "position": {
+            "type": "string",
+            "nullable": true,
+            "example": "แถว 2 ที่ 3"
+          },
+          "qrCode": {
+            "type": "string",
+            "example": "K7QM4TZP",
+            "description": "รหัสใน QR ของเครื่อง (/q/<qrCode>)"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "/api/v1/equipment/0d6f…/photo?v=1759480000000",
+            "description": "URL รูปเครื่อง (?v= เปลี่ยนเมื่อแก้ไข) · null = ยังไม่มีรูป"
+          },
+          "category": {
+            "$ref": "#/components/schemas/EquipmentCategoryDto"
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EquipmentState"
+              }
+            ]
+          },
+          "openRequest": {
+            "nullable": true,
+            "description": "ใบที่ยังไม่ปิดล่าสุดของเครื่องนี้",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OpenRequestRefDto"
+              }
+            ]
+          },
+          "room": {
+            "$ref": "#/components/schemas/InventoryRoomRefDto"
+          }
+        },
+        "required": [
+          "id",
+          "roomId",
+          "label",
+          "name",
+          "assetNumber",
+          "specs",
+          "position",
+          "qrCode",
+          "isActive",
+          "photoUrl",
+          "category",
+          "state",
+          "openRequest",
+          "room"
+        ]
+      },
+      "RoomRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "floor": {
+            "type": "number",
+            "nullable": true
+          },
+          "building": {
+            "$ref": "#/components/schemas/BuildingRefDto"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "floor",
+          "building"
+        ]
+      },
+      "EquipmentHistoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RequestStatus"
+              }
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "status",
+          "description",
+          "createdAt",
+          "completedAt"
+        ]
+      },
+      "EquipmentDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "example": "PC-01"
+          },
+          "name": {
+            "type": "string",
+            "example": "Dell OptiPlex 7090"
+          },
+          "assetNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "specs": {
+            "type": "string",
+            "nullable": true,
+            "description": "รายละเอียดเครื่องหลายบรรทัด"
+          },
+          "position": {
+            "type": "string",
+            "nullable": true,
+            "example": "แถว 2 ที่ 3"
+          },
+          "qrCode": {
+            "type": "string",
+            "example": "K7QM4TZP",
+            "description": "รหัสใน QR ของเครื่อง (/q/<qrCode>)"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "photoUrl": {
+            "type": "string",
+            "nullable": true,
+            "example": "/api/v1/equipment/0d6f…/photo?v=1759480000000",
+            "description": "URL รูปเครื่อง (?v= เปลี่ยนเมื่อแก้ไข) · null = ยังไม่มีรูป"
+          },
+          "category": {
+            "$ref": "#/components/schemas/EquipmentCategoryDto"
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EquipmentState"
+              }
+            ]
+          },
+          "openRequest": {
+            "nullable": true,
+            "description": "ใบที่ยังไม่ปิดล่าสุดของเครื่องนี้",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OpenRequestRefDto"
+              }
+            ]
+          },
+          "room": {
+            "$ref": "#/components/schemas/RoomRefDto"
+          },
+          "history": {
+            "description": "ประวัติการแจ้งซ่อมล่าสุด 20 ใบ",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EquipmentHistoryDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "roomId",
+          "label",
+          "name",
+          "assetNumber",
+          "specs",
+          "position",
+          "qrCode",
+          "isActive",
+          "photoUrl",
+          "category",
+          "state",
+          "openRequest",
+          "room",
+          "history"
+        ]
+      },
+      "UpdateEquipmentDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assetNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "specs": {
+            "type": "string",
+            "nullable": true
+          },
+          "position": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ย้ายไปห้องอื่น"
+          }
+        }
+      },
+      "QrTargetDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "room",
+              "equipment"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ]
       },
       "CategoryDto": {
         "type": "object",
@@ -4402,7 +6702,28 @@
           },
           "name": {
             "type": "string",
-            "example": "ไฟฟ้าและแสงสว่าง"
+            "example": "คอมพิวเตอร์"
+          },
+          "symptoms": {
+            "example": [
+              "เปิดไม่ติด",
+              "จอไม่แสดงภาพ"
+            ],
+            "description": "ปุ่มอาการในหน้าแจ้งซ่อม",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "icon": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryIcon"
+              }
+            ]
+          },
+          "sortOrder": {
+            "type": "number"
           },
           "isActive": {
             "type": "boolean",
@@ -4410,24 +6731,27 @@
           },
           "requestCount": {
             "type": "number",
-            "description": "จำนวนใบแจ้งซ่อมในหมวดนี้"
+            "description": "จำนวนใบแจ้งซ่อมจริงในหมวดนี้"
           },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
+          "openRequestCount": {
+            "type": "number",
+            "description": "ใบที่ยังไม่ปิดงาน"
           },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
+          "equipmentCount": {
+            "type": "number",
+            "description": "จำนวนเครื่องในห้องต่าง ๆ ที่เป็นประเภทนี้"
           }
         },
         "required": [
           "id",
           "name",
+          "symptoms",
+          "icon",
+          "sortOrder",
           "isActive",
           "requestCount",
-          "createdAt",
-          "updatedAt"
+          "openRequestCount",
+          "equipmentCount"
         ]
       },
       "CreateCategoryDto": {
@@ -4437,7 +6761,26 @@
             "type": "string",
             "minLength": 2,
             "maxLength": 100,
-            "example": "ไฟฟ้าและแสงสว่าง"
+            "example": "คอมพิวเตอร์"
+          },
+          "symptoms": {
+            "maxItems": 12,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "icon": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryIcon"
+              }
+            ]
+          },
+          "sortOrder": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999
           }
         },
         "required": [
@@ -4450,7 +6793,27 @@
           "name": {
             "type": "string",
             "minLength": 2,
-            "maxLength": 100
+            "maxLength": 100,
+            "example": "คอมพิวเตอร์"
+          },
+          "symptoms": {
+            "maxItems": 12,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "icon": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryIcon"
+              }
+            ]
+          },
+          "sortOrder": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999
           },
           "isActive": {
             "type": "boolean"
@@ -4469,13 +6832,25 @@
       "CreateRepairRequestDto": {
         "type": "object",
         "properties": {
-          "buildingId": {
+          "equipmentId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "เครื่องที่ชำรุด (จากหน้าห้องหรือสแกน QR ของเครื่อง)"
+          },
+          "roomId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ห้องที่แจ้ง (ไม่เจาะจงเครื่อง เช่น ไฟห้อง ประตู)"
+          },
+          "buildingCode": {
+            "type": "string",
+            "example": "CS",
+            "description": "code ของอาคารใน Core Hub — บังคับเมื่อไม่ได้เลือกห้อง/เครื่อง"
           },
           "categoryId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "description": "บังคับเมื่อไม่ได้เลือกเครื่อง"
           },
           "floor": {
             "type": "number",
@@ -4487,13 +6862,15 @@
             "type": "string",
             "minLength": 2,
             "maxLength": 150,
-            "example": "ห้องปฏิบัติการคอมพิวเตอร์ 1 (CS-201)"
+            "example": "ห้องน้ำชายชั้น 2",
+            "description": "บังคับเมื่อไม่ได้เลือกห้อง/เครื่อง"
           },
           "equipment": {
             "type": "string",
             "minLength": 2,
             "maxLength": 150,
-            "example": "เครื่องปรับอากาศ"
+            "example": "หลอดไฟ",
+            "description": "บังคับเมื่อไม่ได้เลือกเครื่อง"
           },
           "assetNumber": {
             "type": "string",
@@ -4513,18 +6890,9 @@
                 "$ref": "#/components/schemas/Priority"
               }
             ]
-          },
-          "qrTagId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "แจ้งจากการสแกนสติกเกอร์ QR"
           }
         },
         "required": [
-          "buildingId",
-          "categoryId",
-          "location",
-          "equipment",
           "description"
         ]
       },
@@ -4557,27 +6925,6 @@
           "status"
         ]
       },
-      "BuildingRefDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "code"
-        ]
-      },
       "CategoryRefDto": {
         "type": "object",
         "properties": {
@@ -4594,16 +6941,46 @@
           "name"
         ]
       },
-      "RequestStatus": {
-        "type": "string",
-        "enum": [
-          "PENDING",
-          "ACCEPTED",
-          "IN_PROGRESS",
-          "ON_HOLD",
-          "COMPLETED",
-          "REJECTED",
-          "CANCELLED"
+      "RequestRoomRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "CS-201"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name"
+        ]
+      },
+      "RequestEquipmentRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "example": "PC-01"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "name"
         ]
       },
       "PersonDto": {
@@ -4613,20 +6990,20 @@
             "type": "string",
             "example": "user-005"
           },
+          "personCode": {
+            "type": "string",
+            "nullable": true,
+            "example": "somchai.j",
+            "description": "รหัสนักศึกษา/บุคลากรจาก Core Hub (GET /people/me) · null = บัญชียังไม่ผูกกับบุคคลในทะเบียน"
+          },
           "displayName": {
             "type": "string",
-            "example": "สมชาย ใจดี"
+            "example": "นายสมชาย ใจดี",
+            "description": "ชื่อจาก Core Hub เฉพาะหน้ารายละเอียดเมื่อผู้ดูมีสิทธิ์ (staff · lecturer · admin หรือตัวเอง) · ไม่งั้นเป็น personCode"
           },
-          "email": {
-            "type": "string"
-          },
-          "phone": {
-            "type": "string",
-            "nullable": true
-          },
-          "workUnit": {
-            "type": "string",
-            "nullable": true
+          "nameFromCoreHub": {
+            "type": "boolean",
+            "description": "true = displayName เป็นชื่อจาก Core Hub"
           },
           "avatarUrl": {
             "type": "string",
@@ -4636,10 +7013,9 @@
         },
         "required": [
           "coreUserId",
+          "personCode",
           "displayName",
-          "email",
-          "phone",
-          "workUnit",
+          "nameFromCoreHub",
           "avatarUrl"
         ]
       },
@@ -4685,6 +7061,22 @@
           "minutesLeft"
         ]
       },
+      "RequestAction": {
+        "type": "string",
+        "enum": [
+          "comment",
+          "cancel",
+          "accept",
+          "assign",
+          "edit",
+          "start",
+          "hold",
+          "complete",
+          "reject",
+          "rate"
+        ],
+        "description": "สิ่งที่ผู้เรียกทำกับใบนี้ได้ตอนนี้ (ใช้แสดงปุ่ม และบอร์ดงานใช้เลือกคอลัมน์ที่ลากไปได้)"
+      },
       "RepairRequestSummaryDto": {
         "type": "object",
         "properties": {
@@ -4699,6 +7091,10 @@
           "equipment": {
             "type": "string"
           },
+          "descriptionExcerpt": {
+            "type": "string",
+            "description": "อาการที่แจ้ง ย่อไม่เกิน 140 ตัวอักษร (ฉบับเต็มอยู่ในรายละเอียด)"
+          },
           "location": {
             "type": "string"
           },
@@ -4711,6 +7107,24 @@
           },
           "category": {
             "$ref": "#/components/schemas/CategoryRefDto"
+          },
+          "room": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RequestRoomRefDto"
+              }
+            ]
+          },
+          "item": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RequestEquipmentRefDto"
+              }
+            ]
           },
           "priority": {
             "allOf": [
@@ -4772,16 +7186,34 @@
             "type": "string",
             "format": "date-time",
             "nullable": true
+          },
+          "followerCount": {
+            "type": "number",
+            "description": "จำนวนคนที่กด \"ฉันก็เจอ\" (ไม่นับผู้แจ้ง)"
+          },
+          "followedByMe": {
+            "type": "boolean",
+            "description": "ผู้เรียกกด \"ฉันก็เจอ\" ใบนี้ไว้"
+          },
+          "allowedActions": {
+            "type": "array",
+            "description": "สิ่งที่ผู้เรียกทำกับใบนี้ได้ตอนนี้ (ใช้แสดงปุ่ม และบอร์ดงานใช้เลือกคอลัมน์ที่ลากไปได้)",
+            "items": {
+              "$ref": "#/components/schemas/RequestAction"
+            }
           }
         },
         "required": [
           "id",
           "code",
           "equipment",
+          "descriptionExcerpt",
           "location",
           "floor",
           "building",
           "category",
+          "room",
+          "item",
           "priority",
           "status",
           "reporter",
@@ -4793,10 +7225,13 @@
           "createdAt",
           "updatedAt",
           "acceptedAt",
-          "completedAt"
+          "completedAt",
+          "followerCount",
+          "followedByMe",
+          "allowedActions"
         ]
       },
-      "QrTagRefDto": {
+      "SimilarRepairRequestDto": {
         "type": "object",
         "properties": {
           "id": {
@@ -4805,12 +7240,86 @@
           },
           "code": {
             "type": "string",
-            "example": "K7QM4TZP"
+            "example": "RP-6909-0012"
+          },
+          "equipment": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "floor": {
+            "type": "number",
+            "nullable": true
+          },
+          "assetNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "$ref": "#/components/schemas/CategoryRefDto"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RequestStatus"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "followerCount": {
+            "type": "number"
+          },
+          "followedByMe": {
+            "type": "boolean",
+            "description": "ผู้เรียกกด \"ฉันก็เจอ\" ใบนี้ไว้แล้ว"
+          },
+          "mine": {
+            "type": "boolean",
+            "description": "ผู้เรียกเป็นคนแจ้งใบนี้เอง"
+          },
+          "sameAsset": {
+            "type": "boolean",
+            "description": "ตรงกันด้วยเลขครุภัณฑ์ (ไม่ใช่แค่ห้องเดียวกัน)"
           }
         },
         "required": [
           "id",
-          "code"
+          "code",
+          "equipment",
+          "location",
+          "floor",
+          "assetNumber",
+          "category",
+          "status",
+          "createdAt",
+          "followerCount",
+          "followedByMe",
+          "mine",
+          "sameAsset"
+        ]
+      },
+      "FollowStateDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "followerCount": {
+            "type": "number"
+          },
+          "followedByMe": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "followerCount",
+          "followedByMe"
         ]
       },
       "ImageKind": {
@@ -4871,7 +7380,8 @@
           "ASSIGNED",
           "UPDATED",
           "COMMENT",
-          "RATED"
+          "RATED",
+          "FOLLOWED"
         ]
       },
       "RequestActivityDto": {
@@ -4926,22 +7436,6 @@
           "createdAt"
         ]
       },
-      "RequestAction": {
-        "type": "string",
-        "enum": [
-          "comment",
-          "cancel",
-          "accept",
-          "assign",
-          "edit",
-          "start",
-          "hold",
-          "complete",
-          "reject",
-          "rate"
-        ],
-        "description": "สิ่งที่ผู้เรียกทำกับใบนี้ได้ตอนนี้ (ใช้แสดงปุ่ม)"
-      },
       "RepairRequestDetailDto": {
         "type": "object",
         "properties": {
@@ -4956,6 +7450,10 @@
           "equipment": {
             "type": "string"
           },
+          "descriptionExcerpt": {
+            "type": "string",
+            "description": "อาการที่แจ้ง ย่อไม่เกิน 140 ตัวอักษร (ฉบับเต็มอยู่ในรายละเอียด)"
+          },
           "location": {
             "type": "string"
           },
@@ -4968,6 +7466,24 @@
           },
           "category": {
             "$ref": "#/components/schemas/CategoryRefDto"
+          },
+          "room": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RequestRoomRefDto"
+              }
+            ]
+          },
+          "item": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RequestEquipmentRefDto"
+              }
+            ]
           },
           "priority": {
             "allOf": [
@@ -5030,6 +7546,21 @@
             "format": "date-time",
             "nullable": true
           },
+          "followerCount": {
+            "type": "number",
+            "description": "จำนวนคนที่กด \"ฉันก็เจอ\" (ไม่นับผู้แจ้ง)"
+          },
+          "followedByMe": {
+            "type": "boolean",
+            "description": "ผู้เรียกกด \"ฉันก็เจอ\" ใบนี้ไว้"
+          },
+          "allowedActions": {
+            "type": "array",
+            "description": "สิ่งที่ผู้เรียกทำกับใบนี้ได้ตอนนี้ (ใช้แสดงปุ่ม และบอร์ดงานใช้เลือกคอลัมน์ที่ลากไปได้)",
+            "items": {
+              "$ref": "#/components/schemas/RequestAction"
+            }
+          },
           "description": {
             "type": "string"
           },
@@ -5040,15 +7571,6 @@
           "feedback": {
             "type": "string",
             "nullable": true
-          },
-          "qrTag": {
-            "nullable": true,
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/QrTagRefDto"
-              }
-            ]
           },
           "images": {
             "type": "array",
@@ -5062,22 +7584,22 @@
               "$ref": "#/components/schemas/RequestActivityDto"
             }
           },
-          "allowedActions": {
-            "type": "array",
-            "description": "สิ่งที่ผู้เรียกทำกับใบนี้ได้ตอนนี้ (ใช้แสดงปุ่ม)",
-            "items": {
-              "$ref": "#/components/schemas/RequestAction"
-            }
+          "canFollow": {
+            "type": "boolean",
+            "description": "ผู้เรียกกด \"ฉันก็เจอ\" ได้ตอนนี้ (ไม่ใช่ผู้แจ้ง · ใบยังเปิดอยู่ · ยังไม่ได้กด)"
           }
         },
         "required": [
           "id",
           "code",
           "equipment",
+          "descriptionExcerpt",
           "location",
           "floor",
           "building",
           "category",
+          "room",
+          "item",
           "priority",
           "status",
           "reporter",
@@ -5090,13 +7612,15 @@
           "updatedAt",
           "acceptedAt",
           "completedAt",
+          "followerCount",
+          "followedByMe",
+          "allowedActions",
           "description",
           "assetNumber",
           "feedback",
-          "qrTag",
           "images",
           "activities",
-          "allowedActions"
+          "canFollow"
         ]
       },
       "UpdateRepairRequestDto": {
@@ -5248,184 +7772,6 @@
         "required": [
           "isRead"
         ]
-      },
-      "OpenRequestHintDto": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string",
-            "example": "RP-6909-0012"
-          },
-          "equipment": {
-            "type": "string"
-          },
-          "status": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RequestStatus"
-              }
-            ]
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "code",
-          "equipment",
-          "status",
-          "createdAt"
-        ]
-      },
-      "QrTagDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "code": {
-            "type": "string",
-            "example": "K7QM4TZP",
-            "description": "รหัส 8 ตัวบนสติกเกอร์ (ไม่มี I O 0 1)"
-          },
-          "building": {
-            "$ref": "#/components/schemas/BuildingRefDto"
-          },
-          "floor": {
-            "type": "number",
-            "nullable": true
-          },
-          "location": {
-            "type": "string",
-            "example": "ห้องปฏิบัติการคอมพิวเตอร์ 1 (CS-201)"
-          },
-          "equipment": {
-            "type": "string",
-            "nullable": true,
-            "example": "เครื่องปรับอากาศ ตัวที่ 2"
-          },
-          "assetNumber": {
-            "type": "string",
-            "nullable": true
-          },
-          "category": {
-            "nullable": true,
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/CategoryRefDto"
-              }
-            ]
-          },
-          "requestCount": {
-            "type": "number",
-            "description": "จำนวนใบแจ้งซ่อมทั้งหมดที่แจ้งผ่าน QR นี้"
-          },
-          "openRequests": {
-            "description": "งานที่ยังไม่ปิดของจุดนี้ (ไม่มีข้อมูลผู้แจ้ง) — ใช้เตือนก่อนแจ้งซ้ำ",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OpenRequestHintDto"
-            }
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "code",
-          "building",
-          "floor",
-          "location",
-          "equipment",
-          "assetNumber",
-          "category",
-          "requestCount",
-          "openRequests",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "CreateQrTagDto": {
-        "type": "object",
-        "properties": {
-          "buildingId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "floor": {
-            "type": "number",
-            "minimum": -5,
-            "maximum": 99
-          },
-          "location": {
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 150
-          },
-          "equipment": {
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 150,
-            "description": "เว้นว่าง = สติกเกอร์ของห้อง/จุด ไม่เจาะจงอุปกรณ์"
-          },
-          "assetNumber": {
-            "type": "string",
-            "maxLength": 50
-          },
-          "categoryId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "หมวดหมู่ที่เลือกไว้ให้ในฟอร์ม"
-          }
-        },
-        "required": [
-          "buildingId",
-          "location"
-        ]
-      },
-      "UpdateQrTagDto": {
-        "type": "object",
-        "properties": {
-          "buildingId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "floor": {
-            "type": "number",
-            "nullable": true,
-            "minimum": -5,
-            "maximum": 99
-          },
-          "location": {
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 150
-          },
-          "equipment": {
-            "type": "string",
-            "nullable": true,
-            "maxLength": 150
-          },
-          "assetNumber": {
-            "type": "string",
-            "nullable": true,
-            "maxLength": 50
-          },
-          "categoryId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          }
-        }
       },
       "StatisticsRangeDto": {
         "type": "object",
@@ -5619,11 +7965,38 @@
           "count"
         ]
       },
+      "BuildingCountDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "CS",
+            "description": "code ของอาคารใน Core Hub"
+          },
+          "name": {
+            "type": "string",
+            "description": "ชื่อจาก Core Hub · หาไม่ได้ = code"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "count"
+        ]
+      },
       "HotSpotDto": {
         "type": "object",
         "properties": {
+          "buildingCode": {
+            "type": "string",
+            "example": "CS"
+          },
           "buildingName": {
-            "type": "string"
+            "type": "string",
+            "description": "ชื่อจาก Core Hub · หาไม่ได้ = code"
           },
           "location": {
             "type": "string"
@@ -5638,6 +8011,7 @@
           }
         },
         "required": [
+          "buildingCode",
           "buildingName",
           "location",
           "count",
@@ -5698,6 +8072,160 @@
           "avgRating"
         ]
       },
+      "StatRoomRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "CS-201"
+          },
+          "name": {
+            "type": "string"
+          },
+          "buildingCode": {
+            "type": "string",
+            "example": "CS"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "buildingCode"
+        ]
+      },
+      "RoomStatDto": {
+        "type": "object",
+        "properties": {
+          "room": {
+            "$ref": "#/components/schemas/StatRoomRefDto"
+          },
+          "total": {
+            "type": "number",
+            "description": "จำนวนที่แจ้งในช่วงนี้"
+          },
+          "open": {
+            "type": "number",
+            "description": "ในจำนวนนั้น ที่ยังไม่ปิด"
+          },
+          "completed": {
+            "type": "number",
+            "description": "ในจำนวนนั้น ที่ซ่อมเสร็จแล้ว"
+          },
+          "equipmentCount": {
+            "type": "number",
+            "description": "เครื่องที่เปิดใช้งานในห้อง (ตอนนี้)"
+          },
+          "brokenNow": {
+            "type": "number",
+            "description": "เครื่องที่มีใบแจ้งซ่อมยังไม่ปิด (ตอนนี้)"
+          }
+        },
+        "required": [
+          "room",
+          "total",
+          "open",
+          "completed",
+          "equipmentCount",
+          "brokenNow"
+        ]
+      },
+      "StatEquipmentRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "example": "PC-01"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "name"
+        ]
+      },
+      "StatEquipmentRoomRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "CS-201"
+          }
+        },
+        "required": [
+          "id",
+          "code"
+        ]
+      },
+      "StatCategoryRefDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "icon": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CategoryIcon"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "icon"
+        ]
+      },
+      "TopEquipmentDto": {
+        "type": "object",
+        "properties": {
+          "equipment": {
+            "$ref": "#/components/schemas/StatEquipmentRefDto"
+          },
+          "room": {
+            "$ref": "#/components/schemas/StatEquipmentRoomRefDto"
+          },
+          "category": {
+            "$ref": "#/components/schemas/StatCategoryRefDto"
+          },
+          "total": {
+            "type": "number",
+            "description": "จำนวนที่แจ้งในช่วงนี้"
+          },
+          "lastReportedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "แจ้งครั้งล่าสุดในช่วงนี้"
+          }
+        },
+        "required": [
+          "equipment",
+          "room",
+          "category",
+          "total",
+          "lastReportedAt"
+        ]
+      },
       "StatisticsDto": {
         "type": "object",
         "properties": {
@@ -5754,7 +8282,7 @@
           "byBuilding": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/NamedCountDto"
+              "$ref": "#/components/schemas/BuildingCountDto"
             }
           },
           "hotSpots": {
@@ -5775,6 +8303,20 @@
             "items": {
               "$ref": "#/components/schemas/TechnicianLoadDto"
             }
+          },
+          "byRoom": {
+            "description": "ใบที่แจ้งในช่วงนี้แยกตามห้อง (เฉพาะใบที่ผูกห้อง) เรียงจากมากไปน้อย",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoomStatDto"
+            }
+          },
+          "topEquipment": {
+            "description": "เครื่องที่ถูกแจ้งบ่อยที่สุดในช่วงนี้ 10 อันดับ",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopEquipmentDto"
+            }
           }
         },
         "required": [
@@ -5789,7 +8331,9 @@
           "byBuilding",
           "hotSpots",
           "trend",
-          "technicians"
+          "technicians",
+          "byRoom",
+          "topEquipment"
         ]
       }
     }

@@ -3,7 +3,7 @@ import { serverApi } from './server-api';
 import type { Building, Category, Me } from './types';
 
 /** ตัวตนของผู้ใช้ใน request นี้ — layout และหน้าเรียกซ้ำได้โดยยิง backend ครั้งเดียว */
-export const getMe = cache(() => serverApi<Me>('/api/v1/me'));
+export const getMe = cache(() => serverApi<Me>('/api/v1/profiles/me'));
 
 export type Option = { value: string; label: string };
 
@@ -17,8 +17,9 @@ export const getCatalog = cache(async (activeOnly: boolean) => {
   return {
     buildings: buildings.ok ? buildings.data : [],
     categories: categories.ok ? categories.data : [],
+    // อาคารจาก Core Hub อ้างด้วย code (ไม่มี id)
     buildingOptions: buildings.ok
-      ? buildings.data.map((b) => ({ value: b.id, label: b.code ? `${b.name} (${b.code})` : b.name }))
+      ? buildings.data.map((b) => ({ value: b.code, label: `${b.name} (${b.code})` }))
       : [],
     categoryOptions: categories.ok ? categories.data.map((c) => ({ value: c.id, label: c.name })) : [],
   };

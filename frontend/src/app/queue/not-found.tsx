@@ -1,5 +1,5 @@
 import { RouteNotFound } from '@/components/shared/RouteStates';
 
 export default function NotFound() {
-  return <RouteNotFound backHref="/queue" backLabel="กลับไปที่คิวงานซ่อม" />;
+  return <RouteNotFound backHref="/board" backLabel="กลับไปที่บอร์ดงานซ่อม" />;
 }

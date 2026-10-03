@@ -6,7 +6,7 @@ import { ArrowBackIcon, CsmjuLogo, secondaryButtonClass } from '@/csmju';
 import { OriginQrCode } from '@/components/features/OriginQrCode';
 import { PrintButton } from '@/components/features/PrintButton';
 import { ApiFailure } from '@/components/shared/ApiFailure';
-import { floorLabel, formatDateTime, formatPhone } from '@/lib/format';
+import { floorLabel, formatDateTime } from '@/lib/format';
 import { PRIORITY_LABEL, STATUS_LABEL } from '@/lib/labels';
 import { serverApi } from '@/lib/server-api';
 import type { RepairRequestDetail } from '@/lib/types';
@@ -61,8 +61,8 @@ export default async function PrintWorkOrderPage(props: PageProps<'/requests/[id
             {r.building.name}
             {r.floor !== null ? ` · ${floorLabel(r.floor)}` : ''}
           </Row>
-          <Row label="ห้อง / จุด">{r.location}</Row>
-          <Row label="สิ่งที่ชำรุด">{r.equipment}</Row>
+          <Row label="ห้อง / จุด">{r.room ? `${r.room.code} ${r.room.name}` : r.location}</Row>
+          <Row label="สิ่งที่ชำรุด">{r.item ? `${r.item.label} · ${r.item.name}` : r.equipment}</Row>
           <Row label="หมวดหมู่ / เลขครุภัณฑ์">
             {r.category.name}
             {r.assetNumber ? ` · ${r.assetNumber}` : ''}
@@ -77,11 +77,9 @@ export default async function PrintWorkOrderPage(props: PageProps<'/requests/[id
           <div className="space-y-1">
             <h2 className="text-label-md">ผู้แจ้ง</h2>
             <p>{r.reporter.displayName}</p>
-            {r.reporter.workUnit ? <p className="text-on-surface-variant">{r.reporter.workUnit}</p> : null}
-            <p className="text-on-surface-variant">
-              {r.reporter.phone ? `โทร ${formatPhone(r.reporter.phone)} · ` : ''}
-              {r.reporter.email}
-            </p>
+            {r.reporter.personCode && r.reporter.nameFromCoreHub ? (
+              <p className="text-on-surface-variant">รหัส {r.reporter.personCode}</p>
+            ) : null}
           </div>
           <div className="space-y-1">
             <h2 className="text-label-md">ช่างผู้รับผิดชอบ</h2>

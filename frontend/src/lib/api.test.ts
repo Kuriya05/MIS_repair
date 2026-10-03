@@ -69,7 +69,7 @@ describe('api client (api-conventions.md ข้อ 3–4)', () => {
   });
 
   it('builds query strings without empty values', () => {
-    expect(toQuery({ q: 'แอร์', page: 2, status: '', buildingId: undefined, mine: false })).toBe(
+    expect(toQuery({ q: 'แอร์', page: 2, status: '', buildingCode: undefined, mine: false })).toBe(
       `?q=${encodeURIComponent('แอร์')}&page=2&mine=false`,
     );
     expect(toQuery({ q: null })).toBe('');

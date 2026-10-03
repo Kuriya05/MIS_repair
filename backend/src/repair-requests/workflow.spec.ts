@@ -1,6 +1,13 @@
 import { identity } from '../__tests__/fixtures';
-import { ApiError } from '../common/api-error';
-import { allowedActions, assertCan, canRead, type RequestAction, type WorkflowSubject } from './workflow';
+import { ApiError } from '../shared/errors';
+import {
+  allowedActions,
+  assertCan,
+  canFollow,
+  canRead,
+  type RequestAction,
+  type WorkflowSubject,
+} from './workflow';
 
 const reporter = { ...identity('USER', 'user-003') };
 const stranger = { ...identity('USER', 'user-002') };
@@ -108,5 +115,28 @@ describe('repair request workflow — 403 ก่อน 409', () => {
     expect(allowedActions(admin, request())).toEqual(['comment', 'accept', 'assign', 'edit', 'reject']);
     const mine = request({ status: 'IN_PROGRESS', assigneeCoreUserId: 'user-005' });
     expect(allowedActions(technician, mine)).toEqual(['comment', 'edit', 'hold', 'complete', 'reject']);
+  });
+});
+
+describe('"ฉันก็เจอ" (follow)', () => {
+  it('another user can follow an open request once', () => {
+    expect(canFollow(stranger, request(), false)).toBe(true);
+    expect(canFollow(stranger, request({ status: 'IN_PROGRESS' }), false)).toBe(true);
+    expect(canFollow(stranger, request(), true)).toBe(false);
+  });
+
+  it('the reporter cannot follow their own request', () => {
+    expect(canFollow(reporter, request(), false)).toBe(false);
+  });
+
+  it('closed requests cannot be followed — report a new one instead', () => {
+    for (const status of ['COMPLETED', 'REJECTED', 'CANCELLED'] as const) {
+      expect(canFollow(stranger, request({ status }), false)).toBe(false);
+    }
+  });
+
+  it('a follower does not gain the reporter’s actions', () => {
+    expect(allowedActions(stranger, request({ status: 'COMPLETED' }))).not.toContain('rate');
+    expect(statusOf(() => assertCan(stranger, request(), 'cancel'))).toBe(403);
   });
 });

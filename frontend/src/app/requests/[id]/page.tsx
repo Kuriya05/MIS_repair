@@ -7,22 +7,22 @@ import {
   cardClass,
   cardHeaderClass,
   cardTitleClass,
-  MailIcon,
+  linkClass,
   PageHeader,
-  PhoneIcon,
   PrintIcon,
-  QrCodeIcon,
   secondaryButtonClass,
   StarIcon,
 } from '@/csmju';
 import { CommentBox } from '@/components/features/requests/CommentBox';
+import { FollowButton } from '@/components/features/requests/FollowButton';
 import { ImageGallery } from '@/components/features/requests/ImageGallery';
 import { PriorityTag, RequestStatusBadge, SlaIndicator } from '@/components/features/requests/badges';
 import { RatingCard } from '@/components/features/requests/RatingCard';
 import { RequestActions } from '@/components/features/requests/RequestActions';
+import { StatusStepper } from '@/components/features/requests/StatusStepper';
 import { Timeline } from '@/components/features/requests/Timeline';
 import { ApiFailure } from '@/components/shared/ApiFailure';
-import { formatDateTime, formatDuration, formatPhone, placeText } from '@/lib/format';
+import { formatDateTime, formatDuration, placeText } from '@/lib/format';
 import { serverApi } from '@/lib/server-api';
 import { getCatalog } from '@/lib/session';
 import type { Person, Profile, RepairRequestDetail } from '@/lib/types';
@@ -79,12 +79,22 @@ export default async function RequestDetailPage(props: PageProps<'/requests/[id]
         title={request.equipment}
         description={placeText(request.building.name, request.floor, request.location)}
         actions={
-          <Link href={`/requests/${request.id}/print`} className={secondaryButtonClass}>
-            <PrintIcon className="h-4 w-4" />
-            พิมพ์ใบงาน
-          </Link>
+          <>
+            <FollowButton
+              requestId={request.id}
+              followerCount={request.followerCount}
+              followedByMe={request.followedByMe}
+              canFollow={request.canFollow}
+            />
+            <Link href={`/requests/${request.id}/print`} className={secondaryButtonClass}>
+              <PrintIcon className="h-4 w-4" />
+              พิมพ์ใบงาน
+            </Link>
+          </>
         }
       />
+
+      <StatusStepper request={request} />
 
       <RequestActions request={request} technicians={technicianOptions} categories={categoryOptions} />
 
@@ -103,16 +113,25 @@ export default async function RequestDetailPage(props: PageProps<'/requests/[id]
                 <Item label="เลขครุภัณฑ์">{request.assetNumber ?? '—'}</Item>
                 <Item label="อาคาร">
                   {request.building.name}
-                  {request.building.code ? ` (${request.building.code})` : ''}
+                  {request.building.name !== request.building.code ? ` (${request.building.code})` : ''}
+                  {request.building.isActive === false ? ' · ปิดใช้งานแล้ว' : ''}
                 </Item>
-                <Item label="แจ้งผ่าน">
-                  {request.qrTag ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <QrCodeIcon className="h-4 w-4 text-primary-container" />
-                      สติกเกอร์ QR {request.qrTag.code}
-                    </span>
+                <Item label="ห้อง">
+                  {request.room ? (
+                    <Link href={`/rooms/${request.room.id}`} className={linkClass}>
+                      {request.room.code} {request.room.name}
+                    </Link>
                   ) : (
-                    'แบบฟอร์ม'
+                    request.location
+                  )}
+                </Item>
+                <Item label="เครื่อง">
+                  {request.item ? (
+                    <Link href={`/equipment/${request.item.id}`} className={linkClass}>
+                      {request.item.label} · {request.item.name}
+                    </Link>
+                  ) : (
+                    'ไม่เจาะจงเครื่อง'
                   )}
                 </Item>
               </dl>
@@ -227,31 +246,11 @@ function PersonCard({ title, person }: { title: string; person: Person }) {
         <Avatar name={person.displayName} src={person.avatarUrl} size={48} />
         <div className="min-w-0">
           <p className="text-body-md font-semibold text-on-surface">{person.displayName}</p>
-          {person.workUnit ? <p className="text-body-md text-on-surface-variant">{person.workUnit}</p> : null}
+          {person.personCode && person.nameFromCoreHub ? (
+            <p className="text-body-md text-on-surface-variant">รหัส {person.personCode}</p>
+          ) : null}
         </div>
       </div>
-      <ul className="mt-3 space-y-2">
-        {person.phone ? (
-          <li>
-            <a
-              href={`tel:${person.phone}`}
-              className="inline-flex min-h-11 items-center gap-2 text-body-md text-primary-container hover:underline"
-            >
-              <PhoneIcon className="h-4 w-4" />
-              {formatPhone(person.phone)}
-            </a>
-          </li>
-        ) : null}
-        <li>
-          <a
-            href={`mailto:${person.email}`}
-            className="inline-flex min-h-11 items-center gap-2 break-all text-body-md text-primary-container hover:underline"
-          >
-            <MailIcon className="h-4 w-4 shrink-0" />
-            {person.email}
-          </a>
-        </li>
-      </ul>
     </section>
   );
 }

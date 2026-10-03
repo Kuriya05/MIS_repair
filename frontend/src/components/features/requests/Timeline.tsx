@@ -1,4 +1,4 @@
-import { AddIcon, ChatIcon, EditIcon, HistoryIcon, PersonIcon, StarIcon, SwapIcon } from '@/csmju';
+import { AddIcon, ChatIcon, EditIcon, GroupIcon, HistoryIcon, PersonIcon, StarIcon, SwapIcon } from '@/csmju';
 import { formatTimestamp } from '@/lib/format';
 import { STATUS_LABEL } from '@/lib/labels';
 import type { RequestActivity } from '@/lib/types';
@@ -10,6 +10,7 @@ const ICON: Record<RequestActivity['type'], typeof HistoryIcon> = {
   UPDATED: EditIcon,
   COMMENT: ChatIcon,
   RATED: StarIcon,
+  FOLLOWED: GroupIcon,
 };
 
 function headline(activity: RequestActivity) {
@@ -27,6 +28,8 @@ function headline(activity: RequestActivity) {
       return `${who} แสดงความคิดเห็น`;
     case 'RATED':
       return `${who} ให้คะแนนความพึงพอใจ`;
+    case 'FOLLOWED':
+      return `${who} พบปัญหาเดียวกัน (ฉันก็เจอ)`;
   }
 }
 

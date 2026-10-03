@@ -67,7 +67,7 @@ export function AvatarEditor({ me }: { me: Me }) {
     const body = new FormData();
     body.append('avatar', draft.file);
     try {
-      await api('/api/v1/me/avatar', { method: 'POST', body });
+      await api('/api/v1/profiles/me/avatar', { method: 'POST', body });
       toast.success('เปลี่ยนรูปโปรไฟล์แล้ว');
       setDraft(null);
       router.refresh();
@@ -86,7 +86,7 @@ export function AvatarEditor({ me }: { me: Me }) {
     setBusy('delete');
     setDeleteError(null);
     try {
-      await api('/api/v1/me/avatar', { method: 'DELETE' });
+      await api('/api/v1/profiles/me/avatar', { method: 'DELETE' });
       toast.success('ลบรูปโปรไฟล์แล้ว');
       setConfirming(false);
       router.refresh();

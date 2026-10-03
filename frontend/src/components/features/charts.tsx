@@ -169,3 +169,38 @@ export function BarList({
     </ul>
   );
 }
+
+/**
+ * แถบสัดส่วนเล็ก ๆ "x จาก y" (เช่น เครื่องเสีย 3 จาก 30) — ตัวเลขอยู่ข้างแถบเสมอ แถบเป็นแค่ภาพประกอบ
+ * tone กำหนดสีแถบ · ค่า 0 แสดงแถบว่างพร้อมตัวเลข
+ */
+export function RatioBar({
+  value,
+  total,
+  label,
+  tone = 'error',
+}: {
+  value: number;
+  total: number;
+  label: string;
+  tone?: StatusTone;
+}) {
+  const percent = total > 0 ? Math.min(100, (value / total) * 100) : 0;
+  return (
+    <div className="flex min-w-32 items-center gap-3">
+      <span className="shrink-0 text-label-md tabular-nums text-on-surface">
+        {formatNumber(value)}
+        <span className="font-normal text-on-surface-variant">/{formatNumber(total)}</span>
+        <span className="sr-only"> {label}</span>
+      </span>
+      <span className="h-2 flex-1 overflow-hidden rounded-full bg-surface-container" aria-hidden="true">
+        {value > 0 ? (
+          <span
+            className={`block h-full rounded-full ${TONE_DOT_CLASS[tone]}`}
+            style={{ width: `${Math.max(4, percent)}%` }}
+          />
+        ) : null}
+      </span>
+    </div>
+  );
+}

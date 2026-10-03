@@ -1,36 +1,33 @@
-import { Permission, ROLE_PERMISSIONS } from './permissions';
-import { CORE_ROLE_TO_SUBSYSTEM_ROLE, mapCoreRole, resolveSubsystemRole } from './role-mapping';
+import { SubsystemRole } from './core-hub-identity';
+import { CORE_ROLE_TO_SUBSYSTEM_ROLE, mapCoreRoleToSubsystemRole } from './role-mapping';
 
-describe('role mapping (authorization.md ข้อ 3)', () => {
-  it('matches the default_role_mapping registered with Core Hub', () => {
-    // ค่าเดียวกับ core-hub-dev/register-subsystem.js และทะเบียนจริง — เปลี่ยนที่หนึ่งต้องเปลี่ยนอีกที่
-    expect(CORE_ROLE_TO_SUBSYSTEM_ROLE).toEqual({ student: 'USER', staff: 'USER', admin: 'ADMIN' });
+describe('Core role -> subsystem role mapping (spec §14)', () => {
+  it.each([
+    ['student', SubsystemRole.USER],
+    ['staff', SubsystemRole.USER],
+    ['lecturer', SubsystemRole.USER],
+    ['admin', SubsystemRole.ADMIN],
+  ])('maps core role "%s" to %s', (coreRole, expected) => {
+    expect(mapCoreRoleToSubsystemRole(coreRole)).toBe(expected);
   });
 
-  it('refuses core roles that are not in the table (→ 403 at the guard)', () => {
-    expect(mapCoreRole('alumni')).toBeNull();
-    expect(mapCoreRole('superuser')).toBeNull();
-    expect(mapCoreRole('')).toBeNull();
+  it('matches default_role_mapping in subsystem.yaml', () => {
+    expect(CORE_ROLE_TO_SUBSYSTEM_ROLE).toEqual({
+      student: 'USER',
+      staff: 'USER',
+      lecturer: 'USER',
+      admin: 'ADMIN',
+    });
   });
 
-  it('turns an appointed staff member into a TECHNICIAN, nobody else', () => {
-    expect(resolveSubsystemRole('staff', true)).toBe('TECHNICIAN');
-    expect(resolveSubsystemRole('staff', false)).toBe('USER');
-    expect(resolveSubsystemRole('student', true)).toBe('USER');
-    expect(resolveSubsystemRole('admin', true)).toBe('ADMIN');
-    expect(resolveSubsystemRole('alumni', true)).toBeNull();
+  it('is case and whitespace tolerant', () => {
+    expect(mapCoreRoleToSubsystemRole('  STAFF ')).toBe(SubsystemRole.USER);
   });
 
-  it('keeps the permission matrix cumulative USER ⊂ TECHNICIAN ⊂ ADMIN', () => {
-    for (const permission of ROLE_PERMISSIONS.USER)
-      expect(ROLE_PERMISSIONS.TECHNICIAN.has(permission)).toBe(true);
-    for (const permission of ROLE_PERMISSIONS.TECHNICIAN)
-      expect(ROLE_PERMISSIONS.ADMIN.has(permission)).toBe(true);
-  });
-
-  it('uses <resource>:<action>[:own|:any] names only', () => {
-    for (const permission of Object.values(Permission)) {
-      expect(permission).toMatch(/^[a-z]+(-[a-z]+)*:[a-z]+(-[a-z]+)*(:(own|any))?$/);
-    }
+  it('refuses alumni, guest and unknown roles (403)', () => {
+    expect(mapCoreRoleToSubsystemRole('alumni')).toBeNull();
+    expect(mapCoreRoleToSubsystemRole('guest')).toBeNull();
+    expect(mapCoreRoleToSubsystemRole('finance-officer')).toBeNull();
+    expect(mapCoreRoleToSubsystemRole(undefined)).toBeNull();
   });
 });

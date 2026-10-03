@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronRightIcon, ImageIcon, TONE_DOT_CLASS } from '@/csmju';
+import { ChevronRightIcon, GroupIcon, ImageIcon, TONE_DOT_CLASS } from '@/csmju';
 import { formatRelative, placeText } from '@/lib/format';
 import { STATUS_TONE } from '@/lib/labels';
 import type { RepairRequestSummary } from '@/lib/types';
@@ -50,6 +50,18 @@ export function RequestList({
                 <span className="text-caption text-on-surface-variant">
                   {formatRelative(request.createdAt)}
                 </span>
+                {request.followerCount > 0 ? (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full bg-primary-container/10 px-2 py-0.5 text-label-sm text-primary-container"
+                    title="ผู้แจ้ง + คนที่กด “ฉันก็เจอ”"
+                  >
+                    <GroupIcon className="h-3.5 w-3.5" />
+                    {request.followerCount + 1} คน
+                  </span>
+                ) : null}
+                {request.followedByMe ? (
+                  <span className="text-caption text-secondary">· คุณกด “ฉันก็เจอ”</span>
+                ) : null}
               </span>
               <span className="block truncate text-body-md font-semibold text-on-surface">
                 {request.equipment}

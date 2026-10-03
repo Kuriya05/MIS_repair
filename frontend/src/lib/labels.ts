@@ -1,5 +1,14 @@
 /** คำเรียกภาษาไทยของค่าที่มาจาก API (ค่าจริงยังเป็นภาษาอังกฤษตาม OpenAPI) */
-import type { Priority, RequestAction, RequestStatus, SlaState, SubsystemRole } from './types';
+import type {
+  CategoryIcon as CategoryIconName,
+  EquipmentState,
+  Priority,
+  RequestAction,
+  RequestStatus,
+  RoomType,
+  SlaState,
+  SubsystemRole,
+} from './types';
 
 export type Tone = 'success' | 'info' | 'warning' | 'error' | 'neutral';
 
@@ -90,4 +99,80 @@ export const ACTION_LABEL: Record<RequestAction, string> = {
   complete: 'ปิดงาน (ซ่อมเสร็จ)',
   reject: 'แจ้งว่าดำเนินการไม่ได้',
   rate: 'ให้คะแนนความพึงพอใจ',
+};
+
+/* ----------------------------------------------------- ห้องและเครื่อง --- */
+
+/** สถานะของเครื่องในห้อง (คำนวณจากใบแจ้งซ่อมที่ยังไม่ปิดของเครื่องนั้น) */
+export const EQUIPMENT_STATE_LABEL: Record<EquipmentState, string> = {
+  OK: 'ใช้งานได้',
+  REPORTED: 'แจ้งแล้ว รอช่าง',
+  IN_PROGRESS: 'กำลังซ่อม',
+  ON_HOLD: 'รออะไหล่',
+};
+
+export const EQUIPMENT_STATE_TONE: Record<EquipmentState, Tone> = {
+  OK: 'success',
+  REPORTED: 'warning',
+  IN_PROGRESS: 'info',
+  ON_HOLD: 'warning',
+};
+
+export const EQUIPMENT_STATES: EquipmentState[] = ['OK', 'REPORTED', 'IN_PROGRESS', 'ON_HOLD'];
+
+/** ชื่อเรียกของไอคอนประเภทอุปกรณ์ */
+export const CATEGORY_ICON_LABEL: Record<CategoryIconName, string> = {
+  computer: 'คอมพิวเตอร์',
+  monitor: 'จอภาพ',
+  projector: 'โปรเจกเตอร์',
+  aircon: 'เครื่องปรับอากาศ',
+  fan: 'พัดลม',
+  light: 'ไฟฟ้า/แสงสว่าง',
+  network: 'เครือข่าย',
+  audio: 'เครื่องเสียง',
+  furniture: 'เฟอร์นิเจอร์',
+  other: 'อื่น ๆ',
+};
+
+/* ---------------------------------------------------------- ประเภทห้อง --- */
+
+export const ROOM_TYPE_LABEL: Record<RoomType, string> = {
+  LAB: 'ห้องปฏิบัติการคอมพิวเตอร์',
+  LECTURE: 'ห้องบรรยายคอมพิวเตอร์',
+  NETWORK_LAB: 'ห้องปฏิบัติการเครือข่าย',
+  MEETING: 'ห้องประชุม',
+  OFFICE: 'ห้องพัก/สำนักงาน',
+  OTHER: 'อื่นๆ',
+};
+
+/** ป้ายสั้นบนการ์ดห้อง (แบบหน้า Facilities ของสาขา) */
+export const ROOM_TYPE_SHORT: Record<RoomType, string> = {
+  LAB: 'ห้องปฏิบัติการ',
+  LECTURE: 'ห้องบรรยาย',
+  NETWORK_LAB: 'ห้องปฏิบัติการ',
+  MEETING: 'ห้องประชุม',
+  OFFICE: 'สำนักงาน',
+  OTHER: 'อื่นๆ',
+};
+
+/** ลำดับหัวข้อของหน้าอาคาร (ห้องเรียน/แล็บก่อน ห้องอื่นไว้ท้าย) */
+export const ROOM_TYPE_ORDER: RoomType[] = ['LAB', 'NETWORK_LAB', 'LECTURE', 'MEETING', 'OFFICE', 'OTHER'];
+
+/**
+ * สีของประเภทห้อง — pill = ป้ายประเภทบนการ์ด · panel = พื้นแทนรูปเมื่อห้องยังไม่มีรูป
+ * ป้ายมีข้อความกำกับเสมอ สีเป็นแค่ตัวช่วยแยกกลุ่ม
+ */
+export const ROOM_TYPE_TONE: Record<RoomType, { pill: string; panel: string }> = {
+  LAB: {
+    pill: 'bg-primary-container/10 text-primary-container',
+    panel: 'bg-primary-fixed text-primary-container',
+  },
+  NETWORK_LAB: { pill: 'bg-chart-4/15 text-violet-800', panel: 'bg-chart-4/15 text-violet-800' },
+  LECTURE: { pill: 'bg-chart-3/15 text-teal-800', panel: 'bg-chart-3/15 text-teal-800' },
+  MEETING: { pill: 'bg-amber-100 text-amber-800', panel: 'bg-amber-100 text-amber-800' },
+  OFFICE: { pill: 'bg-chart-2/15 text-sky-800', panel: 'bg-chart-2/15 text-sky-800' },
+  OTHER: {
+    pill: 'bg-surface-variant text-on-surface-variant',
+    panel: 'bg-surface-container text-on-surface-variant',
+  },
 };

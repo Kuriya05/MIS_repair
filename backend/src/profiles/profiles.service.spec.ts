@@ -1,9 +1,11 @@
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { testConfig } from '../__tests__/fixtures';
-import { ApiError } from '../common/api-error';
+import type { ConfigService } from '@nestjs/config';
+import { ApiError } from '../shared/errors';
 import type { PrismaService } from '../prisma/prisma.service';
+import type { PeopleService } from '../core-hub/people.service';
+import type { PeopleDirectory } from '../directory/people-directory';
 import { ImageStorage } from '../repair-images/image-storage';
 import { avatarUrlOf } from './profile.view';
 import { MAX_AVATAR_BYTES, ProfilesService } from './profiles.service';
@@ -53,9 +55,9 @@ describe('รูปโปรไฟล์', () => {
 
   beforeEach(async () => {
     dir = await mkdtemp(join(tmpdir(), 'repair-avatars-'));
-    storage = new ImageStorage({ ...testConfig(), uploadDir: dir });
+    storage = new ImageStorage({ get: () => dir } as unknown as ConfigService);
     row = { id: PROFILE_ID, coreUserId: 'user-002', avatarFilename: null };
-    service = new ProfilesService(fakePrisma(row), storage);
+    service = new ProfilesService(fakePrisma(row), storage, {} as PeopleService, {} as PeopleDirectory);
   });
   afterEach(() => rm(dir, { recursive: true, force: true }));
 
@@ -97,6 +99,8 @@ describe('รูปโปรไฟล์', () => {
         row.avatarFilename = '00000000-0000-4000-8000-000000000000.png';
       }),
       storage,
+      {} as PeopleService,
+      {} as PeopleDirectory,
     );
     expect(await codeOf(racing.setAvatar('user-002', file(PNG)))).toMatch(/^CONFLICT/);
     expect(await readdir(dir)).toEqual([]);

@@ -1,9 +1,10 @@
-# csmju-repair — ฐานข้อมูลของระบบนี้ (repair_db) + backend/frontend แบบ container
+# csmju-maintenance-request (ระบบแจ้งซ่อม) — ฐานข้อมูลของระบบนี้ (repair_db) + backend/frontend แบบ container
 #
 #   docker compose up -d db                 # เฉพาะฐานข้อมูล (พัฒนาในเครื่องด้วย pnpm dev:*)
 #   docker compose --profile app up -d      # รันทั้งระบบใน container
 #
-# Core Hub ไม่อยู่ในไฟล์นี้ — เป็นระบบกลางที่รันแยก (ค่าเริ่มต้นชี้ไปที่เครื่อง host :3000)
+# Core Hub ไม่อยู่ในไฟล์นี้ — ใช้ตัวจริงที่ https://csmju2030.jowave.com (standards/docs/connect-core-hub.md)
+# ชื่อ project คงเป็น csmju-repair เพื่อให้ใช้ volume ฐานข้อมูลเดิมในเครื่องต่อได้
 name: csmju-repair
 
 services:
@@ -14,7 +15,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: repair_db
     ports:
-      - '5434:5432'
+      # Windows บางเครื่องจอง 5433–5532 ไว้ (Hyper-V/WSL) — เปลี่ยนพอร์ตฝั่ง host ได้ด้วย REPAIR_DB_PORT ใน .env
+      - '${REPAIR_DB_PORT:-5434}:5432'
     volumes:
       - repair_db_data:/var/lib/postgresql/data
     healthcheck:
@@ -30,17 +32,17 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       NODE_ENV: production
-      PORT: 3002
+      PORT: 4221
       DATABASE_URL: postgresql://postgres:postgres@db:5432/repair_db
-      CORE_HUB_URL: ${CORE_HUB_URL:-http://host.docker.internal:3000}
-      CORE_HUB_JWKS_URL: ${CORE_HUB_JWKS_URL:-http://host.docker.internal:3000/api/v1/.well-known/jwks.json}
+      CORE_HUB_URL: ${CORE_HUB_URL:-https://csmju2030.jowave.com}
+      CORE_HUB_JWKS_URL: ${CORE_HUB_JWKS_URL:-https://csmju2030.jowave.com/api/v1/.well-known/jwks.json}
+      CORE_HUB_WEB_URL: ${CORE_HUB_WEB_URL:-https://csmju2030.jowave.com}
       CORE_HUB_ISSUER: core-hub
       CORE_HUB_AUDIENCE: csmju2030
-      SUBSYSTEM_ID: csmju-repair
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3102}
+      SUBSYSTEM_ID: csmju-maintenance-request
       UPLOAD_DIR: /data/uploads
     ports:
-      - '3002:3002'
+      - '4221:4221'
     volumes:
       - repair_uploads:/data/uploads
     extra_hosts:
@@ -55,13 +57,13 @@ services:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        NEXT_PUBLIC_CORE_HUB_URL: ${NEXT_PUBLIC_CORE_HUB_URL:-http://localhost:3000}
-        NEXT_PUBLIC_SUBSYSTEM_ID: csmju-repair
-        BACKEND_URL: http://backend:3002
+        NEXT_PUBLIC_CORE_HUB_URL: ${NEXT_PUBLIC_CORE_HUB_URL:-https://csmju2030.jowave.com}
+        NEXT_PUBLIC_SUBSYSTEM_ID: csmju-maintenance-request
+        BACKEND_URL: http://backend:4221
     environment:
-      BACKEND_URL: http://backend:3002
+      BACKEND_URL: http://backend:4221
     ports:
-      - '3102:3102'
+      - '3221:3221'
     depends_on:
       - backend
 

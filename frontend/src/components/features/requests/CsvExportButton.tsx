@@ -17,7 +17,7 @@ const FILTER_KEYS = [
   'status',
   'state',
   'priority',
-  'buildingId',
+  'buildingCode',
   'categoryId',
   'sort',
   'assigneeCoreUserId',

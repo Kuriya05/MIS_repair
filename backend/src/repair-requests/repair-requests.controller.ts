@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -19,12 +20,13 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import type { CoreHubIdentity } from '../auth/core-hub-identity';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { RepairActor } from '../actor/repair-actor';
+import { CurrentActor } from '../actor/current-actor.decorator';
+import { CoreHubAccessToken } from '../auth/decorators/core-hub-access-token.decorator';
 import { RequirePermissions } from '../auth/decorators/require-permissions.decorator';
 import { Permission } from '../auth/permissions';
-import { ApiEnvelope, ApiErrors, ApiPageEnvelope } from '../common/swagger';
-import { UuidParam } from '../common/uuid.pipe';
+import { ApiEnvelope, ApiErrors, ApiPageEnvelope } from '../shared/swagger';
+import { UuidParam } from '../shared/uuid.pipe';
 import { MAX_IMAGE_BYTES, MAX_IMAGES_PER_UPLOAD } from '../repair-images/image-storage';
 import {
   AssignRepairRequestDto,
@@ -32,11 +34,14 @@ import {
   ChangeStatusDto,
   CreateCommentDto,
   CreateRepairRequestDto,
+  FollowStateDto,
   ListRepairRequestsQueryDto,
   RateRepairRequestDto,
   RepairRequestDetailDto,
   RepairRequestSummaryDto,
   RequestActivityDto,
+  SimilarRepairRequestDto,
+  SimilarRepairRequestsQueryDto,
   UpdateRepairRequestDto,
 } from './repair-requests.dto';
 import { RepairRequestsService } from './repair-requests.service';
@@ -80,8 +85,39 @@ export class RepairRequestsController {
   @ApiOperation({ summary: 'รายการใบแจ้งซ่อม (ของฉัน / งานที่ฉันรับผิดชอบ / ทั้งหมด)' })
   @ApiPageEnvelope(RepairRequestSummaryDto)
   @ApiErrors(400, 403)
-  list(@CurrentUser() user: CoreHubIdentity, @Query() query: ListRepairRequestsQueryDto) {
-    return this.requests.list(user, query);
+  list(
+    @CurrentActor() user: RepairActor,
+    @CoreHubAccessToken() token: string,
+    @Query() query: ListRepairRequestsQueryDto,
+  ) {
+    return this.requests.list(user, token, query);
+  }
+
+  @Get('similar')
+  @RequirePermissions(Permission.REPAIR_REQUEST_CREATE)
+  @ApiOperation({ summary: 'ใบที่ยังเปิดอยู่และน่าจะเป็นเรื่องเดียวกัน (ใช้ตอนกรอกฟอร์มแจ้งซ่อม)' })
+  @ApiEnvelope(SimilarRepairRequestDto, { isArray: true })
+  @ApiErrors(400, 403)
+  similar(@CurrentActor() user: RepairActor, @Query() query: SimilarRepairRequestsQueryDto) {
+    return this.requests.similar(user, query);
+  }
+
+  @Post(':id/followers')
+  @RequirePermissions(Permission.REPAIR_REQUEST_FOLLOW)
+  @ApiOperation({ summary: '"ฉันก็เจอ" — ติดตามใบแจ้งซ่อมเดิมแทนการแจ้งซ้ำ' })
+  @ApiEnvelope(FollowStateDto, { status: 201 })
+  @ApiErrors(400, 403, 404, 409)
+  follow(@CurrentActor() user: RepairActor, @Param('id', UuidParam) id: string) {
+    return this.requests.follow(user, id);
+  }
+
+  @Delete(':id/followers/me')
+  @RequirePermissions(Permission.REPAIR_REQUEST_FOLLOW)
+  @ApiOperation({ summary: 'เลิกติดตามใบแจ้งซ่อมที่กด "ฉันก็เจอ" ไว้' })
+  @ApiEnvelope(FollowStateDto)
+  @ApiErrors(400, 403, 404)
+  unfollow(@CurrentActor() user: RepairActor, @Param('id', UuidParam) id: string) {
+    return this.requests.unfollow(user, id);
   }
 
   @Get(':id')
@@ -89,8 +125,12 @@ export class RepairRequestsController {
   @ApiOperation({ summary: 'รายละเอียดใบแจ้งซ่อม พร้อมรูป ประวัติ และสิ่งที่ผู้เรียกทำได้' })
   @ApiEnvelope(RepairRequestDetailDto)
   @ApiErrors(400, 403, 404)
-  get(@CurrentUser() user: CoreHubIdentity, @Param('id', UuidParam) id: string) {
-    return this.requests.get(user, id);
+  get(
+    @CurrentActor() user: RepairActor,
+    @CoreHubAccessToken() token: string,
+    @Param('id', UuidParam) id: string,
+  ) {
+    return this.requests.get(user, token, id);
   }
 
   @Post()
@@ -102,11 +142,12 @@ export class RepairRequestsController {
   @ApiEnvelope(RepairRequestDetailDto, { status: 201 })
   @ApiErrors(400, 403)
   create(
-    @CurrentUser() user: CoreHubIdentity,
+    @CurrentActor() user: RepairActor,
+    @CoreHubAccessToken() token: string,
     @Body() dto: CreateRepairRequestDto,
     @UploadedFiles() files: Express.Multer.File[] = [],
   ) {
-    return this.requests.create(user, dto, files);
+    return this.requests.create(user, token, dto, files);
   }
 
   @Patch(':id')
@@ -115,11 +156,12 @@ export class RepairRequestsController {
   @ApiEnvelope(RepairRequestDetailDto)
   @ApiErrors(400, 403, 404, 409)
   update(
-    @CurrentUser() user: CoreHubIdentity,
+    @CurrentActor() user: RepairActor,
+    @CoreHubAccessToken() token: string,
     @Param('id', UuidParam) id: string,
     @Body() dto: UpdateRepairRequestDto,
   ) {
-    return this.requests.update(user, id, dto);
+    return this.requests.update(user, token, id, dto);
   }
 
   @Post(':id/cancel')
@@ -128,11 +170,12 @@ export class RepairRequestsController {
   @ApiEnvelope(RepairRequestDetailDto, { status: 201 })
   @ApiErrors(400, 403, 404, 409)
   cancel(
-    @CurrentUser() user: CoreHubIdentity,
+    @CurrentActor() user: RepairActor,
+    @CoreHubAccessToken() token: string,
     @Param('id', UuidParam) id: string,
     @Body() dto: CancelRepairRequestDto,
   ) {
-    return this.requests.cancel(user, id, dto);
+    return this.requests.cancel(user, token, id, dto);
   }
 
   @Post(':id/accept')
@@ -140,8 +183,12 @@ export class RepairRequestsController {
   @ApiOperation({ summary: 'ช่างรับงานที่ยังไม่มีผู้รับผิดชอบ' })
   @ApiEnvelope(RepairRequestDetailDto, { status: 201 })
   @ApiErrors(400, 403, 404, 409)
-  accept(@CurrentUser() user: CoreHubIdentity, @Param('id', UuidParam) id: string) {
-    return this.requests.accept(user, id);
+  accept(
+    @CurrentActor() user: RepairActor,
+    @CoreHubAccessToken() token: string,
+    @Param('id', UuidParam) id: string,
+  ) {
+    return this.requests.accept(user, token, id);
   }
 
   @Post(':id/assign')
@@ -150,11 +197,12 @@ export class RepairRequestsController {
   @ApiEnvelope(RepairRequestDetailDto, { status: 201 })
   @ApiErrors(400, 403, 404, 409)
   assign(
-    @CurrentUser() user: CoreHubIdentity,
+    @CurrentActor() user: RepairActor,
+    @CoreHubAccessToken() token: string,
     @Param('id', UuidParam) id: string,
     @Body() dto: AssignRepairRequestDto,
   ) {
-    return this.requests.assign(user, id, dto);
+    return this.requests.assign(user, token, id, dto);
   }
 
   @Post(':id/status')
@@ -170,12 +218,13 @@ export class RepairRequestsController {
   @ApiEnvelope(RepairRequestDetailDto, { status: 201 })
   @ApiErrors(400, 403, 404, 409)
   changeStatus(
-    @CurrentUser() user: CoreHubIdentity,
+    @CurrentActor() user: RepairActor,
+    @CoreHubAccessToken() token: string,
     @Param('id', UuidParam) id: string,
     @Body() dto: ChangeStatusDto,
     @UploadedFiles() files: Express.Multer.File[] = [],
   ) {
-    return this.requests.changeStatus(user, id, dto, files);
+    return this.requests.changeStatus(user, token, id, dto, files);
   }
 
   @Post(':id/rating')
@@ -184,11 +233,12 @@ export class RepairRequestsController {
   @ApiEnvelope(RepairRequestDetailDto, { status: 201 })
   @ApiErrors(400, 403, 404, 409)
   rate(
-    @CurrentUser() user: CoreHubIdentity,
+    @CurrentActor() user: RepairActor,
+    @CoreHubAccessToken() token: string,
     @Param('id', UuidParam) id: string,
     @Body() dto: RateRepairRequestDto,
   ) {
-    return this.requests.rate(user, id, dto);
+    return this.requests.rate(user, token, id, dto);
   }
 
   @Post(':id/comments')
@@ -197,10 +247,11 @@ export class RepairRequestsController {
   @ApiEnvelope(RequestActivityDto, { status: 201 })
   @ApiErrors(400, 403, 404, 409)
   comment(
-    @CurrentUser() user: CoreHubIdentity,
+    @CurrentActor() user: RepairActor,
+    @CoreHubAccessToken() token: string,
     @Param('id', UuidParam) id: string,
     @Body() dto: CreateCommentDto,
   ) {
-    return this.requests.comment(user, id, dto);
+    return this.requests.comment(user, token, id, dto);
   }
 }

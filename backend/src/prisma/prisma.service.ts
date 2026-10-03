@@ -1,13 +1,15 @@
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { APP_CONFIG, type AppConfig } from '../config/configuration';
 import { PrismaClient } from '../../generated/prisma/client';
 
-/** Prisma 7 + driver adapter (PrismaPg) · เชื่อมต่อเมื่อมี query แรก ไม่ต่อฐานข้อมูลตอนบูต */
+/**
+ * ฐานข้อมูลของระบบนี้เท่านั้น (repair_db — ไม่ใช่ฐานของ Core Hub) · Prisma 7 + driver adapter
+ * เชื่อมต่อเมื่อมี query แรก ไม่ต่อฐานข้อมูลตอนบูต (สร้าง openapi.json ได้โดยไม่มีฐานข้อมูล)
+ */
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
-  constructor(@Inject(APP_CONFIG) config: AppConfig) {
-    super({ adapter: new PrismaPg({ connectionString: config.databaseUrl }) });
+  constructor() {
+    super({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
   }
 
   async onModuleDestroy() {

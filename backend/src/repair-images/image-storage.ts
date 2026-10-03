@@ -1,10 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
-import { validationError } from '../common/api-error';
-import { APP_CONFIG, type AppConfig } from '../config/configuration';
+import { validationError } from '../shared/errors';
+import { ConfigService } from '@nestjs/config';
 
 /** รูปต่อ 1 ไฟล์ไม่เกิน 8 MB · ครั้งละไม่เกิน 5 รูป · รวมต่อใบแจ้งซ่อมไม่เกิน 10 รูปต่อประเภท */
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -43,8 +43,8 @@ export type StoredImage = { filename: string; mimeType: ImageType['mimeType']; s
 export class ImageStorage {
   private readonly root: string;
 
-  constructor(@Inject(APP_CONFIG) config: AppConfig) {
-    this.root = resolve(config.uploadDir);
+  constructor(config: ConfigService) {
+    this.root = resolve(config.get<string>('uploadDir', 'uploads'));
   }
 
   /** ตรวจทุกไฟล์ก่อน แล้วจึงเขียน — ถ้าเขียนไม่สำเร็จกลางทาง จะลบไฟล์ที่เขียนไปแล้วทิ้ง */

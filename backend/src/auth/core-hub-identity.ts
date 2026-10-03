@@ -1,24 +1,42 @@
-import type { Request } from 'express';
-import type { CoreRole, SubsystemRole } from './role-mapping';
-import type { PermissionValue } from './permissions';
+/**
+ * Subsystem-local roles. Deliberately NOT identical to Core Hub role names.
+ * USER = ผู้แจ้งซ่อม · TECHNICIAN = บุคลากรที่ผู้ดูแลแต่งตั้งเป็นช่าง (Layer 2 เก็บใน profiles — role mapping
+ * ให้ได้แค่ USER/ADMIN แล้ว RepairActorGuard ยกเป็น TECHNICIAN) · ADMIN = ผู้ดูแลระบบแจ้งซ่อม
+ */
+export enum SubsystemRole {
+  USER = 'USER',
+  TECHNICIAN = 'TECHNICIAN',
+  ADMIN = 'ADMIN',
+}
 
-/** claim ที่ผ่านการตรวจลายเซ็นแล้วเท่านั้น (auth-contract.md ข้อ 3) */
-export type VerifiedClaims = {
-  sub: string;
+/**
+ * Identity attached to a request. Every field originates from a
+ * cryptographically verified Core Hub JWT claim - never from a header or body.
+ */
+export interface CoreHubIdentity {
+  /** Core Hub user id (`sub`). */
+  id: string;
+  /** Core Hub email (`email`). */
   email: string;
-  role: string;
-  sid?: string;
-  exp: number;
-};
-
-/** ตัวตนของผู้เรียกใน request นี้ — identity มาจาก token เท่านั้น ไม่เชื่อ body/query/header อื่น */
-export type CoreHubIdentity = {
-  coreUserId: string;
-  email: string;
-  coreRole: CoreRole;
+  /** Core Hub central role (`role`). */
+  coreRole: string;
+  /** Core Hub session id (`sid`). */
+  sessionId?: string;
+  /** Result of the subsystem's own role mapping. */
   subsystemRole: SubsystemRole;
-  permissions: ReadonlySet<PermissionValue>;
-  tokenExpiresAt: number;
-};
+  /** When the verified token - and with it this session - expires (`exp`, epoch seconds). */
+  exp?: number;
+}
 
-export type AuthenticatedRequest = Request & { identity?: CoreHubIdentity };
+export interface CoreHubTokenPayload {
+  sub: string;
+  email?: string;
+  role?: string;
+  sid?: string;
+  iss: string;
+  aud: string | string[];
+  iat?: number;
+  exp?: number;
+  /** Authorized party: the registered subsystem the token was issued for (when Core Hub sets it). */
+  azp?: string;
+}

@@ -1,17 +1,22 @@
 /** ค่าที่หน้าเว็บเปิดเผยได้ (NEXT_PUBLIC_*) — ห้ามใส่ความลับหรือ token (ui-design-system.md ข้อ 16.1.1) */
-export const SUBSYSTEM_ID = process.env.NEXT_PUBLIC_SUBSYSTEM_ID ?? 'csmju-repair';
+export const SUBSYSTEM_ID = process.env.NEXT_PUBLIC_SUBSYSTEM_ID ?? 'csmju-maintenance-request';
 export const DISPLAY_NAME = 'ระบบแจ้งซ่อม';
+/** เว็บของ Core Hub (portal) — ใช้กับปุ่ม "กลับหน้าหลัก" เท่านั้น · การเข้า/ออกจากระบบผ่าน /auth/* ของระบบนี้ */
 export const CORE_HUB_URL = (process.env.NEXT_PUBLIC_CORE_HUB_URL ?? '').replace(/\/+$/, '');
 
+/** คุกกี้ session ของระบบนี้ = <ชื่อระบบ แทน - ด้วย _>_access_token (auth-contract.md 1.2 ข้อ 5.1) */
+export const SESSION_COOKIE = `${SUBSYSTEM_ID.replace(/-/g, '_')}_access_token`;
+
 /**
- * ที่หมายเมื่อต้องเข้าสู่ระบบใหม่: portal ของ Core Hub พร้อมชื่อระบบนี้ เพื่อให้ Core Hub ส่ง SSO กลับมา
- * (auth-contract.md ข้อ 5 และ 7 — v1.0 ต่ออายุด้วยการวิ่ง SSO ใหม่) · เปลี่ยนได้ด้วย NEXT_PUBLIC_CORE_HUB_LOGIN_URL
+ * เข้าสู่ระบบ/ต่ออายุ: ทุกครั้งเริ่มที่ GET /auth/login ของระบบนี้ (backend สร้าง state แล้วส่งไปเว็บ Core Hub)
+ * ต้องเปิดแบบ top-level navigation เท่านั้น ห้าม fetch (auth-contract.md ข้อ 5, 7)
  */
-export function coreHubLoginUrl() {
-  const custom = process.env.NEXT_PUBLIC_CORE_HUB_LOGIN_URL;
-  if (custom) return custom;
-  return CORE_HUB_URL ? `${CORE_HUB_URL}/?subsystem=${encodeURIComponent(SUBSYSTEM_ID)}` : '';
+export function loginHref(next?: string) {
+  return next && next !== '/' ? `/auth/login?next=${encodeURIComponent(next)}` : '/auth/login';
 }
+
+/** ออกจากระบบทั้งระบบ: POST /auth/logout → backend ลบคุกกี้แล้วพาไปหน้า /logout ของ Core Hub */
+export const LOGOUT_ACTION = '/auth/logout';
 
 /** "กลับหน้าหลัก" = Dashboard ของ Core Hub (ปุ่มเดียวกันทุกระบบย่อย) */
 export function coreHubHomeUrl() {

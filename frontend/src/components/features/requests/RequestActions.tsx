@@ -461,7 +461,7 @@ function AssignDialog({
         <DialogError message={error} />
         {technicians.length === 0 ? (
           <p className="text-body-md text-on-surface-variant">
-            ยังไม่มีช่างคนอื่นในระบบ — แต่งตั้งบุคลากรเป็นช่างได้ที่หน้า “ผู้ใช้และช่าง”
+            ยังไม่มีช่างคนอื่นในระบบ — ผู้ดูแลกด “รับงาน” ที่บอร์ดงานซ่อมเพื่อดูแลงานนี้เองได้
           </p>
         ) : null}
         <FormField id="assign-to" label="ช่างผู้รับผิดชอบ" required error={missing ? 'กรุณาเลือกช่าง' : null}>

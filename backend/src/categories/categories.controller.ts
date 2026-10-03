@@ -2,8 +2,8 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestj
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RequirePermissions } from '../auth/decorators/require-permissions.decorator';
 import { Permission } from '../auth/permissions';
-import { ApiEnvelope, ApiErrors, ApiPageEnvelope, DeletedDto } from '../common/swagger';
-import { UuidParam } from '../common/uuid.pipe';
+import { ApiEnvelope, ApiErrors, ApiPageEnvelope, DeletedDto } from '../shared/swagger';
+import { UuidParam } from '../shared/uuid.pipe';
 import { CategoryDto, CreateCategoryDto, ListCategoriesQueryDto, UpdateCategoryDto } from './categories.dto';
 import { CategoriesService } from './categories.service';
 
