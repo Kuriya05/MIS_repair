@@ -11,7 +11,7 @@ const rootEnv = resolve(process.cwd(), '..', '.env');
 if (existsSync(rootEnv)) {
   const parsed = parseEnv(readFileSync(rootEnv, 'utf8'));
   for (const [key, value] of Object.entries(parsed)) {
-    const wanted = key === 'BACKEND_URL' || key.startsWith('NEXT_PUBLIC_');
+    const wanted = key === 'BACKEND_URL' || key === 'CORE_HUB_WEB_URL' || key.startsWith('NEXT_PUBLIC_');
     if (wanted && value !== undefined && process.env[key] === undefined) process.env[key] = value;
   }
 }

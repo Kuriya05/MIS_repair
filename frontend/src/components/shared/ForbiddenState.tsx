@@ -22,7 +22,7 @@ export function ForbiddenState({
         <a href={backHref} className={secondaryButtonClass}>
           กลับหน้าหลัก
         </a>
-        <a href={coreHubHomeUrl()} className={tonalButtonClass}>
+        <a href={coreHubHomeUrl() ?? '/'} className={tonalButtonClass}>
           ขอสิทธิ์เข้าใช้งาน
         </a>
       </div>

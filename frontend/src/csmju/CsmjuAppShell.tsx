@@ -59,7 +59,7 @@ const focusRingOnDark =
  *
  * ตามคำขอของเจ้าของระบบ: บนจอ md+ sidebar ย่อเป็นแถบไอคอน 72px และกางเต็ม 256px เมื่อชี้เมาส์
  * หรือกด Tab เข้ามา (กางทับเนื้อหา ไม่ดันหน้า) · ปุ่ม "ตรึงแถบเมนู" กลับเป็นแบบมาตรฐานที่กางตลอด
- * ปุ่มกลับหน้าหลัก/ออกจากระบบยังอยู่ตำแหน่งเดิมทั้งสองแบบ · มือถือยังเป็น drawer ตามเดิม
+ * ปุ่มกลับ CSMJU Portal/ออกจากระบบยังอยู่ตำแหน่งเดิมทั้งสองแบบ · มือถือยังเป็น drawer ตามเดิม
  */
 export function CsmjuAppShell({
   subsystemName,
@@ -82,7 +82,8 @@ export function CsmjuAppShell({
   primaryAction?: { label: string; href: string };
   searchSlot?: ReactNode;
   notificationsSlot?: ReactNode;
-  homeHref: string;
+  /** ปุ่ม "กลับ CSMJU Portal" (CORE_HUB_WEB_URL) · ไม่ส่ง = ไม่แสดง */
+  homeHref?: string;
   logoutAction: string;
   /** ISO 8601 จาก GET /api/v1/me — ใช้ต่ออายุล่วงหน้าตอนเปลี่ยนหน้า */
   sessionExpiresAt?: string;
@@ -233,10 +234,12 @@ export function CsmjuAppShell({
               <span className={label}>{pinned ? 'เลิกตรึงแถบเมนู' : 'ตรึงแถบเมนูไว้'}</span>
             </button>
           ) : null}
-          <a href={homeHref} className={onDarkItem}>
-            <Icons.HomeIcon className="h-4 w-4 shrink-0" />
-            <span className={label}>กลับหน้าหลัก</span>
-          </a>
+          {homeHref ? (
+            <a href={homeHref} className={onDarkItem}>
+              <Icons.HomeIcon className="h-4 w-4 shrink-0" />
+              <span className={label}>กลับ CSMJU Portal</span>
+            </a>
+          ) : null}
           <form method="post" action={logoutAction}>
             <button type="submit" className={onDarkItem}>
               <Icons.LogoutIcon className="h-4 w-4 shrink-0" />
@@ -346,9 +349,11 @@ export function CsmjuAppShell({
             <p>
               © {new Date().getFullYear() + 543} สาขาวิชาวิทยาการคอมพิวเตอร์ คณะวิทยาศาสตร์ มหาวิทยาลัยแม่โจ้
             </p>
-            <a href={homeHref} className="font-semibold text-secondary hover:underline">
-              CSMJU Portal
-            </a>
+            {homeHref ? (
+              <a href={homeHref} className="font-semibold text-secondary hover:underline">
+                CSMJU Portal
+              </a>
+            ) : null}
           </div>
         </footer>
       </div>
@@ -415,7 +420,8 @@ function UserMenu({
   logoutAction,
 }: {
   user: ShellUser;
-  homeHref: string;
+  /** ปุ่ม "กลับ CSMJU Portal" (CORE_HUB_WEB_URL) · ไม่ส่ง = ไม่แสดง */
+  homeHref?: string;
   logoutAction: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -504,10 +510,12 @@ function UserMenu({
               <Icons.PersonIcon className="h-5 w-5 text-outline" />
               โปรไฟล์ของฉัน
             </Link>
-            <a role="menuitem" href={homeHref} className={itemClass}>
-              <Icons.HomeIcon className="h-5 w-5 text-outline" />
-              กลับหน้าหลัก
-            </a>
+            {homeHref ? (
+              <a role="menuitem" href={homeHref} className={itemClass}>
+                <Icons.HomeIcon className="h-5 w-5 text-outline" />
+                กลับ CSMJU Portal
+              </a>
+            ) : null}
             <div role="separator" className="my-1 h-px bg-outline-variant/40" />
             <form method="post" action={logoutAction}>
               <button

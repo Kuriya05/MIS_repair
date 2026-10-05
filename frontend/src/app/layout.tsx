@@ -80,7 +80,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
       <main id="main" className="mx-auto flex min-h-dvh max-w-xl items-center p-4">
         <div className="w-full">
           {me.status === 403 ? (
-            <ForbiddenState message={me.message} backHref={coreHubHomeUrl()} />
+            <ForbiddenState message={me.message} backHref={coreHubHomeUrl() ?? '/'} />
           ) : (
             <ErrorState message={me.message} />
           )}
@@ -113,7 +113,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
           <CommandPalette canSeeAll={can(user, P.REQUEST_READ_ANY)} isAdmin={can(user, P.PROFILE_READ_ANY)} />
         }
         notificationsSlot={can(user, P.JOB_ACCEPT) ? undefined : <NotificationBell />}
-        homeHref={coreHubHomeUrl()}
+        homeHref={coreHubHomeUrl() ?? undefined}
         logoutAction={LOGOUT_ACTION}
         sessionExpiresAt={user.session.expiresAt}
         initialPinned={sidebarPinned}
